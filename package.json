@@ -1,0 +1,23 @@
+{
+  "name": "telegram-hostess-bot",
+  "version": "1.0.0",
+  "description": "A Telegram Bot capable of creating and maintaining calendars with RSVP capabilities.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/DevAndrewGeorge/telegram-hostess-bot.git"
+  },
+  "author": "Andrew George",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DevAndrewGeorge/telegram-hostess-bot/issues"
+  },
+  "homepage": "https://github.com/DevAndrewGeorge/telegram-hostess-bot#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "ini": "^1.3.5"
+  }
+}
