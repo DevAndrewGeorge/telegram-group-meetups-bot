@@ -19,10 +19,10 @@ pid.removeOnExit();
 
 
 // setting up logging
-const logger = winston.createLogger({
+const message_logger = winston.createLogger({
     level: config.log.level,
     transports: [
-        new winston.transports.File({ filename: process.env.APP_DIRECTORY + "/app.log" }),
+        new winston.transports.File({ filename: config.log.message_log_path }),
         new winston.transports.Console()
     ]
 });
@@ -61,6 +61,13 @@ function main() {
     function handleMessage(message) {
         // unified exit callback for all messages received
         function sendMessage(err, responseText) {
+            message_logger.info({
+                timestamp: Math.round((new Date()).getTime() / 1000),
+                user_id: message.from.id,
+                chat_id: message.chat.id,
+                action: parsed_text["command"],
+                incoming: false
+            });
             bot.sendMessage(chat_id, responseText, {parse_mode: 'Markdown'});
         }
 
@@ -68,7 +75,18 @@ function main() {
         const user = message.from,
             chat_id = message.chat.id,
             args = parsed_text["arguments"];
-    
+
+        // logging history
+        message_logger.info({
+            timestamp: message.date,
+            user_id: message.from.id,
+            chat_id: message.chat.id,
+            action: parsed_text["command"],
+            incoming: true
+        });
+
+
+        // executing relative paths
         switch (parsed_text["command"].toLowerCase()) {
             case "/start":
                 start(user, chat_id, args, database, sendMessage);
@@ -77,14 +95,6 @@ function main() {
                 createcalendar(user, chat_id, args, database, sendMessage);
                 break;
         }
-    
-        logger.debug({
-            user_id: message.from.id,
-            username: message.from.username,
-            timestamp: message.date,
-            chat_id: message.chat.id,
-            action: message.text
-        });
     }
 
 
