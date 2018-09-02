@@ -1,8 +1,11 @@
 // importing modules
-const TelegramBot = require("node-telegram-bot-api");
 const fs = require("fs");
-const config = require("./config");
 const winston = require("winston");
+const TelegramBot = require("node-telegram-bot-api");
+const database = require("./database");
+const config = require("./config");
+const dialog = require("./dialog");
+const nunjucks = require("nunjucks");
 
 
 // writing PID to file
@@ -49,11 +52,42 @@ function parseCommand(text) {
 
 
 function start(bot, user, chat_id, arguments) {
-    bot.sendMessage(
-        chat_id,
-        "Hello, @" + user.username + "! Type /create [name] to begin creatinga calendar with [name]."
-    )
-    .catch(error => console.log(error));
+    function greet() {
+    }
+
+    function insert_react(err, res, fields) {
+        console.log(err);
+        // TODO: error handling
+        const str = nunjucks.renderString(
+            dialog['responses']['start/0'],
+            { username: user.username }
+        ) + "\n\n" + dialog['tooltips']['start/0'];
+        bot.sendMessage(chat_id, str, {parse_mode: 'Markdown'});
+    }
+
+    function lookup_react(err, res, fields) {
+        // TODO: error handling
+        if (res.length === 0) {
+            database.set_active_calendar(user.id, null, insert_react);
+            return;
+        }
+
+        if (res[0]['calender_title']) {
+            const str = nunjucks.renderString(
+                dialog['responses']['start/2'],
+                { username: user.username, calendar_title: res[0]['calendar_title'] }
+            );
+            bot.sendMessage(chat_id, str, {parse_mode: 'Markdown'});
+        } else {
+            const str = nunjucks.renderString(
+                dialog['responses']['start/1'],
+                { username: user.username }
+            ) + "\n\n" + dialog['tooltips']['start/1'];
+            bot.sendMessage(chat_id, str, {parse_mode: 'Markdown'});
+        }
+    }
+
+    database.get_active_calendar(user.id, lookup_react);
 }
 
 
