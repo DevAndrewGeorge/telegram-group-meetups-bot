@@ -11,6 +11,7 @@ const nunjucks = require("nunjucks");
 // command modules
 const start = require("./commands/start");
 const createcalendar = require("./commands/createcalendar");
+const respond = require("./commands/respond");
 
 
 // writing PID to file
@@ -23,6 +24,14 @@ const message_logger = winston.createLogger({
     level: config.log.level,
     transports: [
         new winston.transports.File({ filename: config.log.message_log_path }),
+        new winston.transports.Console()
+    ]
+});
+
+const application_logger = winston.createLogger({
+    level: 'debug',
+    transports: [
+        new winston.transports.File({ filename: config.log.application_log_path }),
         new winston.transports.Console()
     ]
 });
@@ -50,8 +59,8 @@ function setup() {
 function parseMessageText(text) {
     const args = text.split(" ");
     parsed = {}
-    parsed["command"] = args[0][0] === "/" ? args[0] : "";
-    parsed["arguments"] = parsed["command"] ? args.slice(1) : args;
+    parsed["command"] = args[0][0] === "/" ? args[0] : "/respond";
+    parsed["arguments"] = parsed["command"] !== "/respond" ? args.slice(1) : args;
     return parsed;
 }
 
@@ -93,6 +102,11 @@ function main() {
                 break;
             case "/createcalendar":
                 createcalendar(user, chat_id, args, database, sendMessage);
+                break;
+            case "/respond":
+                respond(user, chat_id, args, database, sendMessage);
+                break;
+            case "/skip":
                 break;
         }
     }

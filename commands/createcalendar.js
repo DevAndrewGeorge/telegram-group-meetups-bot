@@ -9,6 +9,14 @@ function createCalendar(user, chat_id, arguments, database, callback) {
     if (!title) {
         callback(null, dialog.render('createcalendar/0', 'createcalendar', {}));
         return;
+    } else {
+        database.create(user.id, 'calendar', title, function(err, result) {
+            // TODO: error checking
+            callback(
+                null,
+                dialog.render('createcalendar/1', [ 'skip' ], { calendar_title: title })
+            );
+        });
     }
 }
 

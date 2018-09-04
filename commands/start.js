@@ -3,12 +3,6 @@ const dialog = require("../dialog");
 
 
 function start(user, chat_id, arguments, database, callback) {
-    function react_to_insert(err, docs) {
-        // TODO: error handling
-        callback(null, dialog.render('start/0', 'createcalendar', { username: user.username }));
-    }
-
-
     function react_to_focus(err, docs) {
         // TODO: error handling
         let response, tooltips;

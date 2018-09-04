@@ -22,7 +22,9 @@ function walk(path) {
 
 
 function render(response_key, tooltip_keys, context) {
-    let template = responses[response_key] + "\n\n";
+    let template = responses[response_key];
+    if (tooltip_keys) template += "\n\n";
+
     if (typeof tooltip_keys === "string") {
         template += tooltips[tooltip_keys];
     } else if (tooltip_keys) {
