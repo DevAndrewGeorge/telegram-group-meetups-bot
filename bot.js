@@ -12,6 +12,7 @@ const nunjucks = require("nunjucks");
 const start = require("./commands/start");
 const createcalendar = require("./commands/createcalendar");
 const respond = require("./commands/respond");
+const skip = require("./commands/skip");
 
 
 // writing PID to file
@@ -107,6 +108,7 @@ function main() {
                 respond(user, chat_id, args, database, sendMessage);
                 break;
             case "/skip":
+                skip(user, chat_id, args, database, sendMessage);
                 break;
         }
     }
