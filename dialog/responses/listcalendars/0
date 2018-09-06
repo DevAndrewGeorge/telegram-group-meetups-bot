@@ -1,0 +1,2 @@
+{% for idx in range(calendars | length) %}{% set calendar = calendars[idx] %}*[{{ idx }}] {{ calendar.title }}.* {{ calendar.description |default('') }}
+{% endfor %}
