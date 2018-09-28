@@ -2,21 +2,11 @@
 const mongojs = require("mongojs");
 const config = require("./config");
 const focus = require("./focus");
+const MongoError = require("./MongoError");
 
 
 // defining new error type
-class MongoError extends Error {
-    constructor(func, user_id, db_error, ...params) {
-        super(...params);
-        this.func = func;
-        this.user_id = user_id;
-        this.message = db_error.message;
-    }
 
-    toString() {
-        return `caller=${this.func} user_id=${this.user_id} error=${JSON.stringify(this.message)}`
-    }
-}
 
 
 // connection setup
@@ -55,8 +45,10 @@ function create(user_id, type, title, callback) {
             { upsert: true },
             function(err, result) {
                 // TODO: error checking
+                // getting the event after the title field
                 const prev_focus_str = focus.get_next_focus(null, {calendar_id: 0});
-                const next_focus_str = focus.get_next_focus(prev_focus_str, {calendar_id: 0});
+                let next_focus_str = focus.get_next_focus(prev_focus_str, {calendar_id: 0});
+                next_focus_str = focus.get_next_focus(next_focus_str, {calendar_id: 0});
                 update_focus(user_id, next_focus_str, callback);
             }
         );
@@ -117,10 +109,12 @@ function show(user_id, focus_str, callback) {
                 return;
             }
 
-            const events = calendars[targets["calendar_id"]]["events"] || [];
+            const calendar = calendars[targets["calendar_id"]];
+            
             if (!targets["event_id"]) {
-                callback(null, events)
+                callback(null, calendar);
             } else {
+                const events = calendar["events"];
                 if (targets["event_id"] >= events.length) {
                     callback(RangeError());
                     return;

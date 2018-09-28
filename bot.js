@@ -6,11 +6,13 @@ const database = require("./mongo");
 const config = require("./config");
 const dialog = require("./dialog");
 const nunjucks = require("nunjucks");
+const MongoError = require("./MongoError");
 
 
 // command modules
 const start = require("./commands/start");
 const createcalendar = require("./commands/createcalendar");
+const editcalendar = require("./commands/editcalendar");
 const listcalendars = require("./commands/listcalendars");
 const respond = require("./commands/respond");
 const skip = require("./commands/skip");
@@ -48,6 +50,13 @@ const application_logger = winston.createLogger({
 function handleMessage(message) {
     // unified exit callback for all messages received
     function sendMessage(err, responseText) {
+        if (err instanceof MongoError) {
+            application_logger.error({
+                label: "MONGO"
+            });
+        } else if (err instanceof RangeError) {
+
+        }
         /* if (err instanceof MongoError) {
 
         } else if (err instanceof RangeError) {
@@ -61,7 +70,7 @@ function handleMessage(message) {
             action: parsed_text["command"],
             incoming: false
         });
-        bot.sendMessage(chat_id, responseText, {parse_mode: 'Markdown'});
+        bot.sendMessage(chat_id, responseText, {parse_mode: "Markdown"});
     }
 
     const parsed_text = parseMessageText(message.text);
@@ -91,6 +100,9 @@ function handleMessage(message) {
         case "/listcalendars":
         case "/listcalendar":
             listcalendars(user, chat_id, args, database, sendMessage);
+            break;
+        case "/editcalendar":
+            editcalendar(user, chat_id, args, database, sendMessage);
             break;
         case "/respond":
             respond(user, chat_id, args, database, sendMessage);

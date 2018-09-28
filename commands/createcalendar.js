@@ -2,9 +2,9 @@
 const dialog = require("../dialog");
 
 
-function createCalendar(user, chat_id, arguments, database, callback) {
+function createCalendar(user, chat_id, args, database, callback) {
     // checking if name was passed as an argument
-    title = arguments.length > 0 ? arguments.join(" ") : null;
+    title = args.length > 0 ? args.join(" ") : null;
 
     if (!title) {
         callback(null, dialog.render('createcalendar/0', 'createcalendar', {}));

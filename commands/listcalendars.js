@@ -13,7 +13,7 @@ function listCalendars(user, chat_id, arguments, database, callback) {
             null,
             dialog.render(
                 'listcalendars/0',
-                ['createcalendar', 'editcalendar', 'showcalendar', 'deletecalendar'],
+                ['createcalendar', 'editcalendar', 'showcalendar', 'listcalendars', 'deletecalendar'],
                 {calendars: docs}
             )
         );

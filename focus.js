@@ -1,6 +1,6 @@
 // constant, ordered focus orders
-const CALENDAR_FOCUS_PATH = "calendars.# calendars.#.description";
-const EVENT_FOCUS_PATH = "calendars.#.events.? calendars.#.events.?.summary calendars.#.events.?.description calendars.#.events.?.start_time calendars.#.events.?.end_time calendars.#.events.?.location";
+const CALENDAR_FOCUS_PATH = "calendars.# calendars.#.title calendars.#.description";
+const EVENT_FOCUS_PATH = "calendars.#.events.? calendars.#.events.?.title calendars.#.events.?.summary calendars.#.events.?.description calendars.#.events.?.start_time calendars.#.events.?.end_time calendars.#.events.?.location";
 
 
 //
