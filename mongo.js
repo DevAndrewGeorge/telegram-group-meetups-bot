@@ -5,10 +5,6 @@ const focus = require("./focus");
 const MongoError = require("./MongoError");
 
 
-// defining new error type
-
-
-
 // connection setup
 const conn_str = config.mongo.user + ":" + config.mongo.pass + "@" + config.mongo.host + "/" + config.mongo.database;
 const db = mongojs(conn_str);
@@ -17,7 +13,12 @@ const collection = db.collection("data");
 
 //
 function find_focus(user_id, callback) {
-    collection.find({user_id: user_id}, {focus: 1}, callback);
+    collection.find({user_id: user_id}, {focus: 1}, function(err, result) {
+        callback(
+            err ? new MongoError("find_focus", user_id, err) : null,
+            result
+        );
+    });
 }
 
 
@@ -25,7 +26,12 @@ function find_focus(user_id, callback) {
 function update_focus(user_id, focus_str, callback) {
     let update = {};
     update[focus_str ? "$set" : "$unset"] = { focus: focus_str };
-    collection.update({user_id: user_id}, update, {upsert: true}, callback);
+    collection.update({user_id: user_id}, update, {upsert: true}, function(err, result) {
+        callback(
+            err ? new MongoError("update_focus", user_id, err) : null,
+            result
+        );
+    });
 }
 
 
@@ -44,7 +50,11 @@ function create(user_id, type, title, callback) {
             },
             { upsert: true },
             function(err, result) {
-                // TODO: error checking
+                if (err) {
+                    callback(new MongoError("create", user_id, err));
+                    return;
+                }
+                
                 // getting the event after the title field
                 const prev_focus_str = focus.get_next_focus(null, {calendar_id: 0});
                 let next_focus_str = focus.get_next_focus(prev_focus_str, {calendar_id: 0});
@@ -67,8 +77,11 @@ function edit(user_id, value, callback) {
     }
 
     find_focus(user_id, function(err, docs) {
-        // TODO: handle error
-
+        if (err) {
+            callback(err);
+            return;
+        }
+        
         // creating update object
         const set = {};
         focus_str = docs[0]["focus"];
@@ -80,7 +93,11 @@ function edit(user_id, value, callback) {
             {$set: set},
             // transition to the next focused property
             function(err, result) {
-                // TODO: error handling
+                if (err) {
+                    callback(new MongoError("edit", user_id, err));
+                    return;
+                }
+
                 const next_focus_str = focus.get_next_focus(focus_str);
                 update_focus(user_id, next_focus_str, callback);
 
@@ -125,6 +142,8 @@ function show(user_id, focus_str, callback) {
 
     });
 }
+
+
 //
 module.exports = {
     find_focus: find_focus,

@@ -14,6 +14,7 @@ const start = require("./commands/start");
 const createcalendar = require("./commands/createcalendar");
 const editcalendar = require("./commands/editcalendar");
 const listcalendars = require("./commands/listcalendars");
+const deletecalendar = require("./commands/deletecalendar");
 const respond = require("./commands/respond");
 const skip = require("./commands/skip");
 
@@ -103,6 +104,9 @@ function handleMessage(message) {
             break;
         case "/editcalendar":
             editcalendar(user, chat_id, args, database, sendMessage);
+            break;
+        case "/deletecalendar":
+            deletecalendar(user, chat_id, args, database, sendMessage);
             break;
         case "/respond":
             respond(user, chat_id, args, database, sendMessage);
