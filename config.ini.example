@@ -1,0 +1,24 @@
+[express]
+public = /path/to/public
+
+[https]
+port = 443
+key_path = /path/to/ssl/key
+cert_path = /path/to/ssl/cert
+fqdn = www.example.tyrantsdevelopment.com
+# probably keep it 0.0.0.0 as this listens on all interfaces
+ip = 0.0.0.0 
+
+[telegram]
+token_path = /path/to/token_path
+
+[log]
+level = debug
+message_log_path = /path/to/message/log
+application_log = /path/to/application/log
+
+[mongo]
+host = host.com
+user = username
+pass = password
+database = db
