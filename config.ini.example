@@ -11,6 +11,8 @@ ip = 0.0.0.0
 
 [telegram]
 token_path = /path/to/token_path
+# either 'webhook' or 'update'
+fetch_method = update
 
 [log]
 level = debug

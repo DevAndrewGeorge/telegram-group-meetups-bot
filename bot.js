@@ -115,19 +115,90 @@ function handleMessage(message) {
 
 
 // helper functions
+/*
+Exit Codes:
+1: error with opening token file
+2: error setting up getUpdates
+3: error setting up setWebhook
+*/
 function setup() {
-    const token = fs.readFileSync(config.telegram.token_path, "utf-8");
-    const webhook_endpoint = "https://" + config.https.fqdn + ":" + config.https.port + "/bot" + token;
-    const options = {
-	webHook: {
-	    port: config.https.port,
-	    host: config.https.ip,
-	    key:  config.https.key_path,
-	    cert: config.https.cert_path
-	    }
+    if (config.telegram.fetch_method === "webhook") {
+        setWebhook();
+    } else {
+        getUpdates();
     }
+}
 
-    const bot = new TelegramBot(token, options);
+function readToken() {
+    try {
+        return fs.readFileSync(config.telegram.token_path, "utf-8");
+    } catch (err) {
+        application_logger.log({
+            level: 'error',
+            message: err.code === "ENOENT" ?
+                `No token file at ${config.telegram.token_path}` :
+                `Unexpected error with token file at ${config.telegram.token_path}. Associated error message: ${err.message}.`
+        });
+        process.exit(1);
+    }
+}
+
+
+function getUpdates() {
+    const options = {
+        "polling": {
+            "interval": 0
+        }
+    };
+
+    const bot = new TelegramBot(readToken(), options);
+    bot.deleteWebHook().then(
+        function(success) {
+            application_logger.log({
+                level: 'info',
+                message: 'getUpdates(): webhook deleted (if one existed)'
+            });
+
+            bot.getUpdates().then(
+                function(success) {
+                    application_logger.log({
+                        level: 'info',
+                        message: 'Update polling successfully established.'
+                    });
+                    bot.on("message", handleMessage);
+                },
+                function(failure) {
+                    application_logger.log({
+                        level: 'error',
+                        message: 'Failed to setup update polling.'
+                    });
+                    process.exit(2);
+                }
+            )
+        },
+        function(failure) {
+            application_logger.log({
+                level: 'warning',
+                message: 'getUpdates(): failed to delete webhook (if one existed)'
+            });
+            process.exit(2);
+        }
+    )
+}
+
+function setWebhook() {
+    const options = {
+        "webHook": {
+            port: config.https.port,
+            host: config.https.ip,
+            key:  config.https.key_path,
+            cert: config.https.cert_path
+        }
+    };
+
+    const bot = new TelegramBot(readToken(), options);
+    const webhook_endpoint = "https://" + config.https.fqdn + ":" + config.https.port + "/bot" + token;
+
     bot.setWebHook(webhook_endpoint, { certificate: options.webHook.cert }).then(
         function(success) {
             application_logger.log({
@@ -141,10 +212,9 @@ function setup() {
                 level: 'error',
                 message: `Webhook unable to established at https://${config.https.fqdn}:${config.https.port} (${failure}). Exiting.`
             });
-            process.exit(1);
+            process.exit(3);
         }
     );
-    return bot;
 }
 
 
@@ -157,6 +227,4 @@ function parseMessageText(text) {
     return parsed;
 }
 
-
-
-const bot = setup();
+setup();
