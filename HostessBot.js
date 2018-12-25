@@ -1,4 +1,8 @@
 const winston = require("winston");
+const SaveError = require("./errors/SaveError");
+const ActiveEditError = require("./errors/ActiveEditError");
+const PropertyError = require("./errors/PropertyError");
+const CommandError = require("./errors/CommandError");
 const TelegramBot = require("node-telegram-bot-api");
 const responses = require("./responses");
 
@@ -12,25 +16,31 @@ class HostessBot extends TelegramBot {
 
   receiveMessage(msg) {
     //handling incoming message
+    msg.hostess = {}
     const parsed_text = HostessBot.parseMessageText(msg.text);
-    msg.command = parsed_text["command"] || "";
-    msg.command = msg.command.toLowerCase();
+    try {
+      msg.hostess.request_command = parsed_text["command"].toLowerCase();
+    } catch (err) {
+      msg.hostess.request_command = "";
+    }
+    msg.hostess.argument = parsed_text["argument"] || "";
     winston.loggers.get("message").info({
       timestamp: msg.date,
       user_id: msg.from.id,
       chat_id: msg.chat.id,
-      command: msg.command,
+      command: msg.hostess.request_command,
       incoming: true
     });
   
     // no/invalid command supplied
-    if (!msg.command || !this.commander.map.hasOwnProperty(msg.command)) {
-      this.sendMessage(undefined, msg);
+    if (!msg.hostess.request_command || 
+      !this.commander.map.hasOwnProperty(msg.hostess.request_command)) {
+      this.sendMessage(new CommandError(), msg);
       return;
     }
 
     // handle command
-    this.commander.mappedFunction(msg.command)(msg, (err, msg) => {
+    this.commander.mappedFunction(msg.hostess.request_command)(msg, (err, msg) => {
       this.sendMessage(err, msg);
     });
   }
@@ -52,17 +62,30 @@ class HostessBot extends TelegramBot {
 
 
   sendMessage(err, msg) {
-    // TODO: error handling
+    msg.hostess.response_command = err ? "error" : msg.hostess.request_command;
     winston.loggers.get("message").info({
-      timestamp: Math.round((new Date()).getTime() / 1000),
+      timestamp: Date.now() / 1000,
       user_id: msg.from.id,
       chat_id: msg.chat.id,
-      action: msg.command,
+      command: msg.hostess.response_command,
       incoming: false
     });
   
     // TODO: deal with unsent messages (.catch())
-    msg.response = responses[msg.command] || responses[""];
+    if (err instanceof SaveError) {
+      msg.response = responses["error"]["save"];
+    } else if (err instanceof ActiveEditError) {
+      msg.response = responses["error"]["state"];
+    } else if (err instanceof PropertyError) {
+      msg.response = responses["error"]["property"];
+    } else if (err instanceof CommandError) {
+      msg.response = responses["error"]["command"];
+    } else if (err) {
+      msg.response = responses["error"]["internal"];
+    } else {
+      msg.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
+    }
+    
     super.sendMessage(
       msg.chat.id,
       msg.response,

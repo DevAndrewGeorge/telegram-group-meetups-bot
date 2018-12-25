@@ -4,6 +4,7 @@ EXTERNAL MODULES
 const mongojs = require("mongojs");
 const winston = require("winston");
 const ActiveEdits = require("./collections/ActiveEdits");
+const Calendars = require("./collections/Calendars");
 
 
 /* ==============================================
@@ -26,6 +27,7 @@ function initalize(mongo_config) {
   const conn_str = mongo_config.user + ":" + mongo_config.pass + "@" + mongo_config.host + "/" + mongo_config.database;
   db = mongojs(conn_str, ["active_edits"]);
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
+  output.calendars = new Calendars(db.collection("calendars"));
 
   //
   db.on("connect", function() {
