@@ -30,7 +30,7 @@ responses["error"]["state"] = `You cannot perform this action because you are cu
 
 
 
-responses["error"]["save"] = `I was unable to save your event or calendar. Did you provide a title?
+responses["error"]["save"] = `You must set a title before you can save.
 
 /help will list commands you can use right now
 `;
@@ -40,6 +40,9 @@ responses["error"]["property"] = `You can't set that property right now!
 
 /help will list commands you can use right now, including any properties
 `;
+
+
+responses["error"]["selection"] = `You've tried selecting a calendar or event that does not exist.`;
 
 
 responses["error"][""] = `This response has yet to be implemented.`;
@@ -64,6 +67,9 @@ responses["calendar"]["title"] = responses["calendar"]["description"] = response
 
 
 // actions
+responses["calendar"]["save"] = `Your calendar has been successfully saved. It is now the active calendar.`;
+
+
 responses["calendar"]["discard"] = `Any edits have been discarded.`;
 
 
@@ -74,6 +80,27 @@ responses["calendar"]["preview"] = `
 <em>Calendar Preview:</em>
 {% if title %}<strong>{{ title }}.</strong> {% endif %}{% if description %}{{ description }}{% endif %}
 {% endif %}`;
+
+
+responses["calendar"]["switchcalendar"] = `
+{% if items|length %}
+{% for item in items %}/c{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.description }}
+{% endfor %}
+/x <em>Do not switch from current calendar.</em>
+{% else %}
+<em>There's nothing to edit because nothing has been saved yet.</em>
+{% endif %}
+`
+
+
+responses["calendar"]["c"] = `
+<em>Now editing calendar</em> <strong>{{ calendar.title }}.</strong>
+
+/edit to change its name and/or description
+/createEvent
+/editEvent
+/deleteEvent
+`;
 
 
 /* ==============================================
@@ -99,6 +126,9 @@ responses["event"]["title"] = responses["event"]["description"] = responses["eve
 
 
 // actions
+responses["event"]["save"] = `Your event has been successfully saved.`;
+
+
 responses["event"]["discard"] = `Any edits have been discarded.`
 
 

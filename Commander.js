@@ -1,23 +1,39 @@
 const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
+const SelectionError = require("./errors/SelectionError");
 
 
 class Commander {
   constructor(backend) {
     this.backend = backend;
     this.map = {
+      // calendars
       "createcalendar": this.create_calendar,
+      "switchcalendar": this.list_calendars,
+
+      // events
       "createevent": this.create_event,
-      "save": this.save,
+      "editevent": this.list_events,
+
+      // properties
       "title": this.set_property,
       "description": this.set_property,
       "location": this.set_property,
       "link": this.set_property,
       "from": this.set_property,
       "to": this.set_property,
+
+      // create actions
+      "preview": this.preview,
       "discard": this.discard,
-      "preview": this.preview
+      "save": this.save,
+
+      //list commands
+      "c": this.change_active_calendar,
+      "e": undefined,
+      "dc": undefined,
+      "de": undefined
     };
   }
 
@@ -26,6 +42,53 @@ class Commander {
     return function(err) {
       callback(err, message);
     }
+  }
+
+
+  change_active_calendar(message, callback) {
+    function patch_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.calendars.patch(
+        message.chat.id,
+        message.hostess.data.calendar._id,
+        "active",
+        true,
+        err => callback(err, message)
+      );
+    }
+
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+      
+      message.hostess.data = {
+        calendar: data[0]
+      };
+
+      this.backend.calendars.patch(
+        message.chat.id,
+        undefined,
+        "active",
+        false,
+        patch_callback.bind(this)
+      )
+    }
+
+    message.hostess.edit_type = "calendar";
+    this.backend.calendars.get(
+      message.chat.id,
+      message.hostess.argument - 1,
+      get_callback.bind(this)
+    );
   }
 
 
@@ -63,6 +126,16 @@ class Commander {
   }
 
 
+  list_calendars(message, callback) {
+    this._list("calendar", message, callback);
+  }
+
+
+  list_events(message, callback) {
+    this._list("event", message, callback);
+  }
+
+
   preview(message, callback) {
     function get_callback(err, data) {
       if (err) {
@@ -89,7 +162,7 @@ class Commander {
       if (err) {
         callback(err, message);
         return;
-      } else if (!data || data.length === 0) {
+      } else if (!data[0]) {
         callback(new ActiveEditError(), message);
         return;
       } else if (!data[0]["title"]) {
@@ -97,11 +170,12 @@ class Commander {
         return;
       }
 
-      this.backend.calendars.put(
-        data[0],
-        this.cb(message, callback).bind(this)
-      );
-      // TODO: DELETE 
+      message.hostess.edit_type = data[0]["type"];
+      if (true || message.hostess.edit_type === "calendar") {
+        this._save_calendar(data[0], message, callback);
+      } else {
+        this._save_event(data[0], message, callback);
+      }
     }
 
     this.backend.active_edits.get(
@@ -147,7 +221,7 @@ class Commander {
 
 
   mappedFunction(command) {
-    return this.map[command].bind(this);
+      return this.map[command].bind(this);
   }
 
 
@@ -184,6 +258,103 @@ class Commander {
       message.chat.id,
       delete_callback.bind(this)
     );
+  }
+
+
+  _list(type, message, callback) {
+    function get_callback(err, data) {
+      if (err) { //database error
+        callback(err, message);
+        return;
+      }
+
+      message.hostess.data = { "items" : data };
+      callback(undefined, message);
+    }
+
+    message.hostess.edit_type = type;
+    const func = type === "calendar" ? this.backend.calendars : this.backend.events;
+    func.get(
+      message.chat.id,
+      undefined,
+      get_callback.bind(this)
+    );
+  }
+
+
+  _save_calendar(calendar, message, callback) {
+    /* after desired calendar is saved, delete active edit */
+    function calendar_put_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.active_edits.delete(
+        message.chat.id,
+        err2 => callback(err2, message)
+      );
+    }
+
+    /* sets all calendars to not active
+       then saves desired calendar */
+    function calendar_patch_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.calendars.put(
+        calendar,
+        calendar_put_callback.bind(this)
+      );
+    }
+
+    // set saved calendar to active calendar
+    calendar.active = true;
+    this.backend.calendars.patch(
+      message.chat.id,
+      undefined,
+      "active",
+      false,
+      calendar_patch_callback.bind(this)
+    );
+  }
+
+  _save_event(event, message, callback) {
+    // TODO: delete active edit
+  }
+
+  static parseListCommand(command) {
+    const prefixes = ["c", "e", "dc", "de"];
+    const prefix = command.replace(/[0-9]/g, "");
+    const postfix = parseInt(command.replace(/[a-z]/g, ""));
+
+    if (prefixes.indexOf(prefix) !== -1 && !isNaN(postfix)) {
+      return {
+        command: prefix,
+        argument: postfix
+      };
+    } else {
+      return false;
+    }
+  }
+
+  static parseCommand(text) {
+    const args = text.split(" ");
+  
+    // no command was provided
+    if (args[0][0] !== "/") {
+      return false;
+    }
+
+    // trivial split
+    const parsed = {};
+    parsed["command"] = args[0].replace("/", "");
+    parsed["argument"] = args.slice(1).join(" ");
+
+    // also checking for list command case
+    return this.parseListCommand(parsed["command"]) || parsed;
   }
 }
 

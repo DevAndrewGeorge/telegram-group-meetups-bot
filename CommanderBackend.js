@@ -5,6 +5,7 @@ const mongojs = require("mongojs");
 const winston = require("winston");
 const ActiveEdits = require("./collections/ActiveEdits");
 const Calendars = require("./collections/Calendars");
+const Events = require("./collections/Events");
 
 
 /* ==============================================
@@ -28,10 +29,10 @@ function initalize(mongo_config) {
   db = mongojs(conn_str, ["active_edits"]);
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
   output.calendars = new Calendars(db.collection("calendars"));
+  output.events = new Calendars(db.collection("events"));
 
   //
   db.on("connect", function() {
-    console.log(db);
     winston.loggers.get("database").info(
       "Successfully established database connection."
     );

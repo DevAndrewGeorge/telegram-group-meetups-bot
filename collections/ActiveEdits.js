@@ -6,7 +6,7 @@ const winston = require("winston");
 
 
 function log(funcName, err) {
-  winston.logger.get("database").error(funcName + " - " + err.toString());
+  winston.loggers.get("database").error(funcName + " - " + err.toString());
 }
 
 
@@ -71,7 +71,12 @@ class ActiveEdits {
       { admin_chat_id: admin_chat_id },
       update,
       { upsert: false, multi: false },
-      callback
+      err => {
+        if (err) {
+          log("ActiveEdits:patch", err);
+        }
+        callback(err);
+      }
     );
   }
 
