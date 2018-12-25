@@ -4,7 +4,7 @@
   "sourceDir": "/srv/hostess",
   "workingDir": "/srv/hostess",
   "logFile": "/var/log/hostess/forever.log",
-  "errFile": "/var/log/hostess/err.log",
+  "errFile": "/var/log/hostess/stderr.log",
   "append": true,
   "watch": true
 }
