@@ -1,0 +1,7 @@
+{
+  "script": "app.js",
+  "pidFile": "/var/run/hostess.pid",
+  "sourceDir": "/srv/hostess",
+  "workingDir": "/srv/hostess",
+  "watch": true
+}
