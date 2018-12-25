@@ -80,6 +80,27 @@ class ActiveEdits {
     );
   }
 
+
+  put(active_edit, callback) {
+    const update = active_edit;
+    const query = {
+      admin_chat_id: active_edit.admin_chat_id
+    };
+
+    this.collection.update(
+      query,
+      update,
+      { upsert: true },
+      err => {
+        if (err) {
+          log("ActiveEdits:put", err);
+        }
+        callback(err);
+      }
+    );
+  }
+
+  
   /**
    * 
    * @param {*} admin_chat_id 

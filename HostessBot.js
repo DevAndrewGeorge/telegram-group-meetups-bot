@@ -6,6 +6,7 @@ const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
 const CommandError = require("./errors/CommandError");
 const SelectionError = require("./errors/SelectionError");
+const DeleteError = require("./errors/DeleteError");
 const TelegramBot = require("node-telegram-bot-api");
 const responses = require("./responses");
 
@@ -14,12 +15,22 @@ class HostessBot extends TelegramBot {
   constructor(token, options, commander) {
     super(token, options);
     this.commander = commander;
+    this.on("message", this.receiveMessage);
+    this.on("callback_query", this.receiveCallbackQuery);
+  }
+
+
+  receiveCallbackQuery(query) {
+    query.message.from = query.from;
+    query.message.text = query.data;
+    this.receiveMessage(query.message);
   }
 
 
   receiveMessage(msg) {
     //handling incoming message
     msg.hostess = {}
+
     const parsed_text = Commander.parseCommand(msg.text);
     try {
       msg.hostess.request_command = parsed_text["command"].toLowerCase();
@@ -66,6 +77,8 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["command"];
     } else if (err instanceof SelectionError) {
       msg.hostess.response = responses["error"]["selection"];
+    } else if (err instanceof DeleteError) {
+      msg.hostess.response = responses["error"]["delete"];
     } else if (err) {
       msg.hostess.response = responses["error"]["internal"];
     } else {
@@ -75,7 +88,10 @@ class HostessBot extends TelegramBot {
     super.sendMessage(
       msg.chat.id,
       nunjucks.renderString(msg.hostess.response, msg.hostess.data || {}),
-      {parse_mode: "HTML"}
+      {
+        parse_mode: "HTML",
+        reply_markup: msg.hostess.keyboard
+      }
     );
   }
 }

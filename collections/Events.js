@@ -95,8 +95,30 @@ class Events {
   }
 
 
-  delete(admin_chat_id, event_index, callback) {
+  delete(admin_chat_id, event_id, callback) {
+    const query = {
+      admin_chat_id: admin_chat_id,
+      active: true
+    };
 
+    const update = {
+      $pull: {
+        events: {
+          _id: mongojs.ObjectId(event_id)
+        }
+      }
+    }
+    
+    this.collection.update(
+      query,
+      update,
+      err => {
+        if (err) {
+          log("Events:delete", err);
+        }
+        callback(err);
+      }
+    );
   }
 
   _event_exists(admin_chat_id, event_id, callback) {

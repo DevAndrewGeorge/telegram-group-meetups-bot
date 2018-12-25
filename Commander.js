@@ -2,6 +2,7 @@ const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
 const SelectionError = require("./errors/SelectionError");
+const DeleteError = require("./errors/DeleteError");
 
 
 class Commander {
@@ -11,10 +12,12 @@ class Commander {
       // calendars
       "createcalendar": this.create_calendar,
       "switchcalendar": this.list_calendars,
+      "edit": this.retrieve_calendar,
 
       // events
       "createevent": this.create_event,
       "editevent": this.list_events,
+      "deleteevent": this.list_events,
 
       // properties
       "title": this.set_property,
@@ -24,16 +27,18 @@ class Commander {
       "from": this.set_property,
       "to": this.set_property,
 
-      // create actions
+      // actions
       "preview": this.preview,
       "discard": this.discard,
       "save": this.save,
+      "delete": this.delete,
+      "cancel": this.cancel,
 
       //list commands
       "c": this.change_active_calendar,
-      "e": this.promote_event,
+      "e": this.retrieve_event,
       "dc": undefined,
-      "de": undefined
+      "de": this.confirm_event_delete
     };
   }
 
@@ -42,6 +47,12 @@ class Commander {
     return function(err) {
       callback(err, message);
     }
+  }
+
+
+  cancel(message, callback) {
+    message.hostess.edit_type = "all";
+    callback(undefined, message);
   }
 
 
@@ -104,6 +115,33 @@ class Commander {
   }
 
 
+  confirm_event_delete(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      message.hostess.data = data[0];
+      message.hostess.keyboard = Commander.createConfirmationKeyboard(
+        "event",
+        message.hostess.argument
+      );
+      callback(undefined, message);
+    }
+    
+    message.hostess.edit_type = "event";
+    this.backend.events.get(
+      message.chat.id,
+      message.hostess.argument - 1,
+      get_callback.bind(this)
+    )
+  }
+
+
   create_calendar(message, callback) {
     this._create("calendar", message, callback);
   }
@@ -111,6 +149,56 @@ class Commander {
 
   create_event(message, callback) {
     this._create("event", message, callback);
+  }
+
+
+  delete(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new DeleteError(), message);
+        return;
+      }
+
+      func.delete(
+        message.chat.id,
+        data[0]._id,
+        err => callback(err, message)
+      );
+    }
+
+    // parsing command
+    // figuring out if we're deleting a calendar or an event
+    const arg = message.hostess.argument;
+    let type;
+    if (arg.indexOf("calander") !== -1) {
+      type = "calendar";
+    } else if (arg.indexOf("event") !== -1) {
+      type = "event";
+    } else {
+      callback(new DeleteError(), message);
+      return;
+    }
+
+    // figuring out which calendar/event we're deleting
+    const pretty_index = parseInt(arg.replace("calendar", "").replace("event", ""));
+    if (isNaN(pretty_index)) {
+      callback(new DeleteError(), message);
+      return;
+    }
+
+
+    // see if calendar/event exists
+    message.hostess.edit_type = type;
+    const func = type === "calendar" ? this.backend.calendars : this.backend.events;
+
+    func.get(
+      message.chat.id,
+      pretty_index - 1,
+      get_callback.bind(this)
+    );
   }
 
 
@@ -165,6 +253,34 @@ class Commander {
 
     this.backend.active_edits.get(
       message.chat.id,
+      get_callback.bind(this)
+    );
+  }
+
+  retrieve_calendar(message, callback) {
+    this._prompte("calendar", message, callback);
+  }
+
+  retrieve_event(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      this.backend.active_edits.put(
+        data[0],
+        err => callback(err, message)
+      );
+    }
+
+    message.hostess.edit_type = "event";
+    this.backend.events.get(
+      message.chat.id,
+      message.hostess.argument - 1,
       get_callback.bind(this)
     );
   }
@@ -367,6 +483,7 @@ class Commander {
     }
   }
 
+
   static parseCommand(text) {
     const args = text.split(" ");
   
@@ -382,6 +499,27 @@ class Commander {
 
     // also checking for list command case
     return this.parseListCommand(parsed["command"]) || parsed;
+  }
+
+  static createConfirmationKeyboard(type, pretty_index) {
+    const inline_keyboard = [
+      [
+        {
+          text: `Yes, delete this ${type}.`,
+          callback_data: `/delete ${type}${pretty_index}`
+        }
+      ],
+      [
+        {
+          text: `No, don't delete this ${type}`,
+          callback_data: "/cancel"
+        }
+      ]
+    ];
+
+    return {
+      "inline_keyboard": inline_keyboard
+    };
   }
 }
 

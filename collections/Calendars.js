@@ -15,6 +15,11 @@ class Calendars {
     this.collection = collection;
   }
 
+  delete(admin_chat_id, calendar_id, callback) {
+
+  }
+
+  
   get(admin_chat_id, calendar_index, callback) {
     const pipeline = [
       { $match: { admin_chat_id: admin_chat_id } },

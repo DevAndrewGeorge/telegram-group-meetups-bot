@@ -4,7 +4,8 @@ RESPONSE OBJECT AND INITIAL CATEGORIES
 const responses = {
   "error": {},
   "calendar": {},
-  "event": {}
+  "event": {},
+  "all": {}
 };
 
 
@@ -43,6 +44,9 @@ responses["error"]["property"] = `You can't set that property right now!
 
 
 responses["error"]["selection"] = `You've tried selecting a calendar or event that does not exist.`;
+
+
+responses["error"]["delete"] = `Can't delete something that does not exist.`;
 
 
 responses["error"][""] = `This response has yet to be implemented.`;
@@ -86,7 +90,7 @@ responses["calendar"]["switchcalendar"] = `
 {% if items|length %}
 {% for item in items %}/c{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.description }}
 {% endfor %}
-/x <em>Do not switch from current calendar.</em>
+/cancel <em>Cancel switching calendars.</em>
 {% else %}
 <em>There's nothing to edit because nothing has been saved yet.</em>
 {% endif %}
@@ -123,13 +127,34 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 
 responses["event"]["editevent"] = `
 {% if items|length %}
-{% for item in items %}/e{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.from }} - {{ item.to }}.
+{% for item in items %}\
+/e{{ loop.index }} <strong>{{ item.title }}.</strong> \
+{% if item.from %}\
+{{ item.from }}\
+{% if item.to %} - {{ item.to }}{% else %}.{% endif%}\
+{% endif %}
 {% endfor %}
-/x <em>Do not edit an event.</em>
+/cancel <em>Cancel choosing an event to edit.</em>
 {% else %}
-<em>There's nothing to edit because nothing has been saved yet.</em>
+<em>There are no events to edit.</em>
 {% endif %}
 `
+
+
+responses["event"]["deleteevent"] = `
+{% if items|length %}
+{% for item in items %}\
+/de{{ loop.index }} <strong>{{ item.title }}.</strong> \
+{% if item.from %}\
+{{ item.from }}\
+{% if item.to %} - {{ item.to }}{% else %}.{% endif%}\
+{% endif %}
+{% endfor %}
+/cancel <em>Cancel choosing an event to delete.</em>
+{% else %}
+<em>There are no events to delete.</em>
+{% endif %}
+`;
 
 
 // properties
@@ -137,6 +162,9 @@ responses["event"]["title"] = responses["event"]["description"] = responses["eve
 
 
 // actions
+responses["event"]["delete"] = `The event has been deleted.`;
+
+
 responses["event"]["save"] = `Your event has been successfully saved.`;
 
 
@@ -144,12 +172,27 @@ responses["event"]["discard"] = `Any edits have been discarded.`
 
 
 responses["event"]["preview"] = `
-<strong>{{ title }}.</strong> {{ location }}. {{ from }} - {{ to }}.
+<strong>{{ title }}.</strong> \
+{% if location %}{{ location }}. {% endif %}\
+{% if from %}\
+{{ from }}\
+{% if to %} - {{ to }}{% endif%}.\
+{% endif %}
 
-{{ description }}
+{% if description %}{{ description }}{% endif %}
 
-<a href="{{ link }}">Click here for more info.</a>
+{% if link %}<a href="{{ link }}">Click here for more info.</a>{% endif %}
 `;
+
+
+//
+responses["event"]["de"] = responses["event"]["preview"];
+
+
+/* ==============================================
+INDISCRIMINATE RESPONSES
+============================================== */
+responses["all"]["cancel"] = `<em>Nothing has been done.</em>`;
 
 
 module.exports = responses;

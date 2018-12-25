@@ -139,7 +139,7 @@ function main() {
   } else {
     hostess_bot = configureWebhook(token);
   }
-  hostess_bot.on("message", hostess_bot.receiveMessage);
+  //hostess_bot.on("message", hostess_bot.receiveMessage);
   hostess_bot.on("polling_error", err => console.log(err));
 }
 
