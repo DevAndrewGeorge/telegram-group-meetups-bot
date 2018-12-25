@@ -52,6 +52,12 @@ responses["error"]["delete"] = `Can't delete something that does not exist.`;
 responses["error"][""] = `This response has yet to be implemented.`;
 
 
+responses["error"]["calendar"] = `You currently do not have an active calendar.
+
+/createcalendar to create a new calendar
+/switchcalendar to choose an active calendar`;
+
+
 /* ==============================================
 CALENDAR COMMANDS
 ============================================== */
@@ -71,6 +77,9 @@ responses["calendar"]["title"] = responses["calendar"]["description"] = response
 
 
 // actions
+responses["calendar"]["edit"] = responses["calendar"]["createcalendar"];
+
+
 responses["calendar"]["save"] = `Your calendar has been successfully saved. It is now the active calendar.`;
 
 

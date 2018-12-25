@@ -3,6 +3,7 @@ const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
 const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
+const ActiveCalendarError = require("./errors/ActiveCalendarError");
 
 
 class Commander {
@@ -258,7 +259,29 @@ class Commander {
   }
 
   retrieve_calendar(message, callback) {
-    this._prompte("calendar", message, callback);
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      const calendar = data.filter( calendar => calendar.active );
+      if (calendar.length === 0) {
+        callback(new ActiveCalendarError(), message);
+        return;
+      }
+
+      this.backend.active_edits.put(
+        calendar[0],
+        err => callback(err, message)
+      );
+    }
+    message.hostess.edit_type = "calendar";
+    this.backend.calendars.get(
+      message.chat.id,
+      undefined,
+      get_callback.bind(this)
+    );
   }
 
   retrieve_event(message, callback) {

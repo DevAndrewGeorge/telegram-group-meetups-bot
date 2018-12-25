@@ -7,6 +7,7 @@ const PropertyError = require("./errors/PropertyError");
 const CommandError = require("./errors/CommandError");
 const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
+const ActiveCalendarError = require("./errors/ActiveCalendarError");
 const TelegramBot = require("node-telegram-bot-api");
 const responses = require("./responses");
 
@@ -51,6 +52,7 @@ class HostessBot extends TelegramBot {
         this.sendMessage(err, msg);
       });
     } catch(err) {
+      console.log(err);
       this.sendMessage(new CommandError(), msg);
     }
   }
@@ -79,6 +81,8 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["selection"];
     } else if (err instanceof DeleteError) {
       msg.hostess.response = responses["error"]["delete"];
+    } else if (err instanceof ActiveCalendarError) {
+      msg.hostess.response = responses["error"]["calendar"];
     } else if (err) {
       msg.hostess.response = responses["error"]["internal"];
     } else {
