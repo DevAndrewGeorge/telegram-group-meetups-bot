@@ -24,7 +24,7 @@ responses["error"]["internal"] = `Apologies. It looks like something went wrong 
 `
 
 
-responses["error"]["state"] = `You've provided a calendar or event property, but you are not currently editing a calendar or event. 
+responses["error"]["state"] = `You cannot perform this action because you are currently not editing a calendar or event.
 
 /help will list commands you can use right now`
 
@@ -63,6 +63,10 @@ responses["calendar"]["createcalendar"] = `Use the following commands to create 
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
 
 
+// actions
+responses["calendar"]["discard"] = `Any edits have been discarded.`
+
+
 /* ==============================================
 EVENT COMMANDS
 ============================================== */
@@ -83,6 +87,10 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 
 // properties
 responses["event"]["title"] = responses["event"]["description"] = responses["event"]["from"] = responses["event"]["to"] = responses["event"]["location"] = responses["event"]["link"] = responses["event"]["createevent"];
+
+
+// actions
+responses["event"]["discard"] = `Any edits have been discarded.`
 
 
 module.exports = responses;

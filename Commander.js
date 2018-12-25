@@ -15,7 +15,8 @@ class Commander {
       "location": this.set_property,
       "link": this.set_property,
       "from": this.set_property,
-      "to": this.set_property
+      "to": this.set_property,
+      "discard": this.discard
     };
   }
 
@@ -34,6 +35,30 @@ class Commander {
 
   create_event(message, callback) {
     this._create("event", message, callback);
+  }
+
+
+  discard(message, callback) {
+    function get_callback(err1, data) {
+      if (err1) {
+        callback(err1, message);
+        return;
+      } else if (!data[0]) {
+        callback(new ActiveEditError(), message);
+        return;
+      }
+      
+      message.hostess.edit_type = data[0]["type"];
+      this.backend.active_edits.delete(
+        message.chat.id,
+        err2 => callback(err2, message)
+      )
+    }
+
+    this.backend.active_edits.get(
+      message.chat.id,
+      get_callback.bind(this)
+    );
   }
 
 
