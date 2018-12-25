@@ -5,7 +5,8 @@ const responses = {
   "error": {},
   "calendar": {},
   "event": {},
-  "all": {}
+  "all": {},
+  "user": {}
 };
 
 
@@ -123,6 +124,7 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 
 /title <code>[TITLE, required]</code>
 /description <code>[DESCRIPTION]</code>
+/summary a shorter description about the event
 /location 
 /link an additional link to that will be attached to the end of the event info.
 /from the start date and time
@@ -167,7 +169,7 @@ responses["event"]["deleteevent"] = `
 
 
 // properties
-responses["event"]["title"] = responses["event"]["description"] = responses["event"]["from"] = responses["event"]["to"] = responses["event"]["location"] = responses["event"]["link"] = responses["event"]["createevent"];
+responses["event"]["title"] = responses["event"]["description"] = responses["event"]["summary"] = responses["event"]["from"] = responses["event"]["to"] = responses["event"]["location"] = responses["event"]["link"] = responses["event"]["createevent"];
 
 
 // actions
@@ -188,6 +190,8 @@ responses["event"]["preview"] = `
 {% if to %} - {{ to }}{% endif%}.\
 {% endif %}
 
+{% if summary %}{{ summary }}{% endif %}
+
 {% if description %}{{ description }}{% endif %}
 
 {% if link %}<a href="{{ link }}">Click here for more info.</a>{% endif %}
@@ -196,6 +200,14 @@ responses["event"]["preview"] = `
 
 //
 responses["event"]["de"] = responses["event"]["preview"];
+
+
+/* ==============================================
+END USER COMMANDS
+============================================== */
+responses["user"]["calendar"] = {
+
+}
 
 
 /* ==============================================

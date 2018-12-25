@@ -23,6 +23,7 @@ class Commander {
       // properties
       "title": this.set_property,
       "description": this.set_property,
+      "summary": this.set_property,
       "location": this.set_property,
       "link": this.set_property,
       "from": this.set_property,
@@ -379,7 +380,7 @@ class Commander {
   _validate_property(type, property) {
     const properties = {
       "calendar": ["title", "description"],
-      "event": ["title", "description", "location", "link", "from", "to"]
+      "event": ["title", "description", "summary", "location", "link", "from", "to"]
     };
 
     try { 
