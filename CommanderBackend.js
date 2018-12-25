@@ -29,7 +29,7 @@ function initalize(mongo_config) {
   db = mongojs(conn_str, ["active_edits"]);
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
   output.calendars = new Calendars(db.collection("calendars"));
-  output.events = new Calendars(db.collection("events"));
+  output.events = new Events(db.collection("calendars"));
 
   //
   db.on("connect", function() {

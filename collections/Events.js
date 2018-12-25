@@ -16,35 +16,102 @@ class Events {
   }
 
 
-  get(admin_chat_id, event_id, callback) {
+  get(admin_chat_id, event_index, callback) {
+    const pipeline = [
+      { $match: {admin_chat_id: admin_chat_id, active: true} },
+      { $sort: { from: 1, to: 1, creation_timestamp: 1} }
+    ];
 
+    if (event_index !== undefined && event_index !== null) {
+      pipeline.push(
+        { $skip: event_index }
+      );
+
+      pipeline.push(
+        { $limit: 1 }
+      );
+    }
+
+    this.collection.aggregate(
+      pipeline,
+      function (err, data) {
+        if (err) {
+          log("Events:get", err);
+        }
+        callback(err, data);
+      }
+    )
   }
 
 
-  put(admin_chat_id, event_id, callback) {
+  put(event, callback) {
+    function create_update_parameters(exists) {
+      const update = {};
+      const query = {
+        admin_chat_id: event.admin_chat_id,
+        active: true
+      };
 
+      
+      if (exists) {
+        update["$set"] = { "events.$": event };
+        query["events._id"] = mongojs.ObjectId(event._id);
+      } else {
+        update["$push"] = { "events": event };
+      }
+
+      return {
+        query: query,
+        update: update
+      };
+    }
+
+    this._event_exists(
+      event.admin_chat_id,
+      event._id,
+      (err, exists) => {
+        if (err) {
+          log("Events:put", err);
+          callback(err);
+          return;
+        }
+
+        const parameters = create_update_parameters(exists);
+        this.collection.update(
+          parameters.query,
+          parameters.update,
+          function(err) {
+            if (err) {
+              log("Events:put", err);
+            }
+            callback(err);
+          }
+        );
+      }
+    );    
   }
 
 
-  delete(admin_chat_id, event_id, callback) {
+  delete(admin_chat_id, event_index, callback) {
 
   }
 
-
-  _get_active_calendar(admin_chat_id, callback) {
+  _event_exists(admin_chat_id, event_id, callback) {
     const query = {
-      "admin_chat_id": admin_chat_id,
-      "active": true
+      admin_chat_id: admin_chat_id,
+      active: true,
+      "events._id": mongojs.ObjectId(event_id)
     };
 
     this.collection.find(
       query,
-      (err, docs) => {
+      function (err, data) {
         if (err) {
-          log("Events:_get_active_calendar", err);
+          log("Events:_event_exists", err);
+          callback(err);
+          return;
         }
-        // TODO: return docs or just events?
-        callback(err, docs);
+        callback(undefined, data.length !== 0);
       }
     )
   }

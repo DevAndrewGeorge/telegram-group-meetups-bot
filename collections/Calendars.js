@@ -40,22 +40,6 @@ class Calendars {
         callback(err, data);
       }
     );
-    
-    /*
-    let cursor = this.collection.find({ admin_chat_id: admin_chat_id });
-    cursor = cursor.sort({ creation_timestamp: 1});
-
-    if (calendar_index !== undefined && calendar_index !== null) {
-      cursor.skip(calendar_index).limit(1);
-    }
-
-    cursor.toArray(function(err, data) {
-      if (err) {
-        log("Calendars:get", err);
-      }
-      callback(err, data);
-    });
-    */
   }
 
 

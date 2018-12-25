@@ -83,11 +83,23 @@ class Commander {
       )
     }
 
+    function active_events_delete_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.calendars.get(
+        message.chat.id,
+        message.hostess.argument - 1,
+        get_callback.bind(this)
+      );
+    }
+
     message.hostess.edit_type = "calendar";
-    this.backend.calendars.get(
+    this.backend.active_events.delete(
       message.chat.id,
-      message.hostess.argument - 1,
-      get_callback.bind(this)
+      active_events_delete_callback.bind(this)
     );
   }
 
@@ -171,7 +183,7 @@ class Commander {
       }
 
       message.hostess.edit_type = data[0]["type"];
-      if (true || message.hostess.edit_type === "calendar") {
+      if (message.hostess.edit_type === "calendar") {
         this._save_calendar(data[0], message, callback);
       } else {
         this._save_event(data[0], message, callback);
@@ -322,7 +334,22 @@ class Commander {
   }
 
   _save_event(event, message, callback) {
-    // TODO: delete active edit
+    function put_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.active_edits.delete(
+        message.chat.id,
+        err => callback(err, message)
+      );
+    }
+
+    this.backend.events.put(
+      event,
+      put_callback.bind(this)
+    );
   }
 
   static parseListCommand(command) {

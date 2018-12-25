@@ -132,4 +132,13 @@ responses["event"]["save"] = `Your event has been successfully saved.`;
 responses["event"]["discard"] = `Any edits have been discarded.`
 
 
+responses["event"]["preview"] = `
+<strong>{{ title }}.</strong> {{ location }}. {{ from }} - {{ to }}.
+
+{{ description }}
+
+<a href="{{ link }}">Click here for more info.</a>
+`;
+
+
 module.exports = responses;
