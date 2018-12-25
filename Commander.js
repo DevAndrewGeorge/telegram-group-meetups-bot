@@ -31,7 +31,7 @@ class Commander {
 
       //list commands
       "c": this.change_active_calendar,
-      "e": undefined,
+      "e": this.promote_event,
       "dc": undefined,
       "de": undefined
     };

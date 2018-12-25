@@ -19,6 +19,9 @@ class Events {
   get(admin_chat_id, event_index, callback) {
     const pipeline = [
       { $match: {admin_chat_id: admin_chat_id, active: true} },
+      { $project: { events: 1 } },
+      { $unwind: "$events" },
+      { $replaceRoot: { newRoot: "$events" } },
       { $sort: { from: 1, to: 1, creation_timestamp: 1} }
     ];
 

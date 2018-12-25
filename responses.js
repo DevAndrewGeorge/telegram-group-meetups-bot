@@ -121,6 +121,17 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 `;
 
 
+responses["event"]["editevent"] = `
+{% if items|length %}
+{% for item in items %}/e{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.from }} - {{ item.to }}.
+{% endfor %}
+/x <em>Do not edit an event.</em>
+{% else %}
+<em>There's nothing to edit because nothing has been saved yet.</em>
+{% endif %}
+`
+
+
 // properties
 responses["event"]["title"] = responses["event"]["description"] = responses["event"]["from"] = responses["event"]["to"] = responses["event"]["location"] = responses["event"]["link"] = responses["event"]["createevent"];
 
