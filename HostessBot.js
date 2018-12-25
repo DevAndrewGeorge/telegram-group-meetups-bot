@@ -1,4 +1,5 @@
 const winston = require("winston");
+const nunjucks = require("nunjucks");
 const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
@@ -73,23 +74,24 @@ class HostessBot extends TelegramBot {
   
     // TODO: deal with unsent messages (.catch())
     if (err instanceof SaveError) {
-      msg.response = responses["error"]["save"];
+      msg.hostess.response = responses["error"]["save"];
     } else if (err instanceof ActiveEditError) {
-      msg.response = responses["error"]["state"];
+      msg.hostess.response = responses["error"]["state"];
     } else if (err instanceof PropertyError) {
-      msg.response = responses["error"]["property"];
+      msg.hostess.response = responses["error"]["property"];
     } else if (err instanceof CommandError) {
-      msg.response = responses["error"]["command"];
+      msg.hostess.response = responses["error"]["command"];
     } else if (err) {
-      msg.response = responses["error"]["internal"];
+      msg.hostess.response = responses["error"]["internal"];
     } else {
-      msg.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
+      msg.hostess.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
     }
     
     super.sendMessage(
       msg.chat.id,
-      msg.response,
-      {parse_mode: "Markdown"});
+      nunjucks.renderString(msg.hostess.response, msg.hostess.data || {}),
+      {parse_mode: "HTML"}
+    );
   }
 }
 

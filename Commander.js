@@ -16,7 +16,8 @@ class Commander {
       "link": this.set_property,
       "from": this.set_property,
       "to": this.set_property,
-      "discard": this.discard
+      "discard": this.discard,
+      "preview": this.preview
     };
   }
 
@@ -61,6 +62,27 @@ class Commander {
     );
   }
 
+
+  preview(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (!data[0]) {
+        callback(new ActiveEditError(), message);
+        return;
+      }
+
+      message.hostess.edit_type = data[0]["type"];
+      message.hostess.data = data[0];
+      callback(undefined, message);
+    }
+
+    this.backend.active_edits.get(
+      message.chat.id,
+      get_callback.bind(this)
+    );
+  }
 
   save(message, callback) {
     function get_callback(err, data) {

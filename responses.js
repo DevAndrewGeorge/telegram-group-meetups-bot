@@ -50,8 +50,8 @@ CALENDAR COMMANDS
 ============================================== */
 responses["calendar"]["createcalendar"] = `Use the following commands to create or edit your calendar.
 
-/title [TITLE, required]
-/description [DESCRIPTION]
+/title <code>[TITLE, required]</code>
+/description <code>[DESCRIPTION]</code>
 
 /preview to preview what the calendar looks like
 /discard to cancel creating or editing this calendar
@@ -64,7 +64,16 @@ responses["calendar"]["title"] = responses["calendar"]["description"] = response
 
 
 // actions
-responses["calendar"]["discard"] = `Any edits have been discarded.`
+responses["calendar"]["discard"] = `Any edits have been discarded.`;
+
+
+responses["calendar"]["preview"] = `
+{% if not title and not description %}
+<em>There is nothing to preview because you haven't set any properties yet.</em>
+{% else %}
+<em>Calendar Preview:</em>
+{% if title %}<strong>{{ title }}.</strong> {% endif %}{% if description %}{{ description }}{% endif %}
+{% endif %}`;
 
 
 /* ==============================================
@@ -72,8 +81,8 @@ EVENT COMMANDS
 ============================================== */
 responses["event"]["createevent"] = `Use the following commands to create or edit your event.
 
-/title [TITLE, required]
-/description [DESCRIPTION]
+/title <code>[TITLE, required]</code>
+/description <code>[DESCRIPTION]</code>
 /location 
 /link an additional link to that will be attached to the end of the event info.
 /from the start date and time
