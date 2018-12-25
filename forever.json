@@ -3,5 +3,8 @@
   "pidFile": "/var/run/hostess.pid",
   "sourceDir": "/srv/hostess",
   "workingDir": "/srv/hostess",
+  "logFile": "/var/log/hostess/forever.log",
+  "errFile": "/var/log/hostess/err.log",
+  "append": true,
   "watch": true
 }
