@@ -35,7 +35,7 @@ class HostessBot extends TelegramBot {
     // parsing
     const parsed_text = Commander.parseCommand(msg.text);
     msg.hostess.request_command = parsed_text.command;
-    msg.hostess.argument = parsed_text["argument"] || "";
+    msg.hostess.argument = parsed_text["argument"];
 
     // logging
     winston.loggers.get("message").info({

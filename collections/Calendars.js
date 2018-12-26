@@ -47,6 +47,23 @@ class Calendars {
     );
   }
 
+  /**
+   * 
+   * @param {mongojs.ObjectId} _id 
+   * @param {function} callback (err, data)
+   */
+  get_by_id(_id, callback) {
+    this.collection.find(
+      { _id: mongojs.ObjectId(_id) },
+      function (err, data) {
+        if (err) {
+          log("Calendars:get_by_id");
+        }
+        callback(err, data);
+      }
+    )
+  }
+
 
   put(calendar, callback) {
     this.collection.update(

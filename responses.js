@@ -218,15 +218,23 @@ If you need me, just yell /calendar, and I'll give you a summary of events. From
 
 responses["user"]["calendar"] = `
 <strong>{{ title }}</strong>
+{%- if description %}
 
 {{ description }}
+{%- endif -%}
 
-{% for event in events -%}
-/e{{ loop.index }}. <strong>{{ event.title }}.</strong>
-{%- if event.from %} {{ event.from }} {% if event.to %}- {{ event.to }}{% endif %}.
-{%- if event.summary %}{{ summary }}{% endif %}
+{%- if events -%}
+{%- for event in events %}
 
-{% endfor %}
+/{{ loop.index }} <strong>{{ event.title }}.</strong>
+{%- if event.from %} {{ event.from }}{%- if event.to %} - {{ event.to }}{%- endif -%}.{%- endif %}
+{%- if event.summary %} {{ event.summary }}{% endif %}
+
+{%- endfor -%}
+{%- else -%}
+
+<em>There are no events scheduled.</em>
+{%- endif -%}
 `
 
 

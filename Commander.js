@@ -30,7 +30,7 @@ class Commander {
       "from": this.set_property,
       "to": this.set_property,
 
-      // actions
+      // edit actions
       "preview": this.preview,
       "discard": this.discard,
       "save": this.save,
@@ -287,8 +287,44 @@ class Commander {
   }
 
 
+  /**
+   * Gets calendar published to the message's originating chat.
+   * @param {Telegram Message} message 
+   * @param {function} callback (err, message)
+   */
   get_info_calendar(message, callback) {
-    
+    function get_by_id_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      message.hostess.data = data[0];
+      callback(undefined, message);
+    }
+
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+      }
+
+      this.backend.calendars.get_by_id(
+        data[0].calendar_id,
+        get_by_id_callback.bind(this)
+      );
+    }
+
+    message.hostess.edit_type = "user";
+    this.backend.shares.get(
+      message.chat.id,
+      get_callback.bind(this)
+    );
   }
 
 

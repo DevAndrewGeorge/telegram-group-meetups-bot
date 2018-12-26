@@ -143,7 +143,7 @@ function main() {
   hostess_bot.on("polling_error", err => console.log(err));
 
   process.on("uncaughtException", err => {
-    console.error("WTF?");
+    console.error(err);
   });
 }
 
