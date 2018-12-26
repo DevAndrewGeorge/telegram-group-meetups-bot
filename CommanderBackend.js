@@ -6,6 +6,7 @@ const winston = require("winston");
 const ActiveEdits = require("./collections/ActiveEdits");
 const Calendars = require("./collections/Calendars");
 const Events = require("./collections/Events");
+const Shares = require("./collections/Shares");
 
 
 /* ==============================================
@@ -30,6 +31,7 @@ function initalize(mongo_config) {
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
   output.calendars = new Calendars(db.collection("calendars"));
   output.events = new Events(db.collection("calendars"));
+  output.shares = new Shares(db.collection("shares"));
 
   //
   db.on("connect", function() {

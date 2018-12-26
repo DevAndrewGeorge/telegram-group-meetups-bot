@@ -74,6 +74,9 @@ responses["calendar"]["createcalendar"] = `Use the following commands to create 
 
 
 // properties
+responses["calendar"]["publish"] = `https://telegram.me/GroupMeetupBot?startgroup={{admin_chat_id}}_{{ calendar_id }}`;
+
+
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
 
 
@@ -139,10 +142,11 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 responses["event"]["editevent"] = `
 {% if items|length %}
 {% for item in items %}\
-/e{{ loop.index }} <strong>{{ item.title }}.</strong> \
+/e{{ loop.index }} <strong>{{ item.title }}. </strong> \
 {% if item.from %}\
 {{ item.from }}\
-{% if item.to %} - {{ item.to }}{% else %}.{% endif%}\
+{% if item.to %} - {{ item.to }}{% else %}. {% endif%}\
+{% if item.summary %}{{ item.summary }}{% endif %}\
 {% endif %}
 {% endfor %}
 /cancel <em>Cancel choosing an event to edit.</em>
@@ -205,9 +209,25 @@ responses["event"]["de"] = responses["event"]["preview"];
 /* ==============================================
 END USER COMMANDS
 ============================================== */
-responses["user"]["calendar"] = {
+responses["user"]["start"] = `
+Hello, everyone! My name is @GroupMeetupBot, and I'm here to keep you up-to-date on events planned for this group.
 
-}
+If you need me, just yell /calendar, and I'll give you a summary of events. From there, you can get more details for particular events and even RSVP to them.
+`;
+
+
+responses["user"]["calendar"] = `
+<strong>{{ title }}</strong>
+
+{{ description }}
+
+{% for event in events -%}
+/e{{ loop.index }}. <strong>{{ event.title }}.</strong>
+{%- if event.from %} {{ event.from }} {% if event.to %}- {{ event.to }}{% endif %}.
+{%- if event.summary %}{{ summary }}{% endif %}
+
+{% endfor %}
+`
 
 
 /* ==============================================

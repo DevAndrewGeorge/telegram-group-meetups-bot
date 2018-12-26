@@ -32,13 +32,12 @@ class HostessBot extends TelegramBot {
     //handling incoming message
     msg.hostess = {}
 
+    // parsing
     const parsed_text = Commander.parseCommand(msg.text);
-    try {
-      msg.hostess.request_command = parsed_text["command"].toLowerCase();
-    } catch (err) {
-      msg.hostess.request_command = "";
-    }
+    msg.hostess.request_command = parsed_text.command;
     msg.hostess.argument = parsed_text["argument"] || "";
+
+    // logging
     winston.loggers.get("message").info({
       timestamp: msg.date,
       user_id: msg.from.id,
@@ -47,6 +46,7 @@ class HostessBot extends TelegramBot {
       incoming: true
     });
 
+    // attempting to execute request_command
     try {
       this.commander.mappedFunction(msg.hostess.request_command)(msg, (err, msg) => {
         this.sendMessage(err, msg);

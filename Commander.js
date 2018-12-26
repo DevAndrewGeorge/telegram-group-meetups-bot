@@ -1,3 +1,4 @@
+const mongojs = require("mongojs");
 const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
@@ -40,7 +41,15 @@ class Commander {
       "c": this.change_active_calendar,
       "e": this.retrieve_event,
       "dc": undefined,
-      "de": this.confirm_event_delete
+      "de": this.confirm_event_delete,
+
+      // user commands
+      "publish": this.publish,
+      "start": this.associate,
+      "calendar": this.get_info_calendar,
+      "event": this.get_info_event,
+      "rsvp": undefined,
+      "unrsvpn": undefined
     };
   }
 
@@ -49,6 +58,56 @@ class Commander {
     return function(err) {
       callback(err, message);
     }
+  }
+
+  /**
+   * Enables user commands such as /calendar, /#, /rsvp, and /unrsvp
+   * after verifying the desired calendar exists
+   * @param {Message} message hostess.argument should have format: [admin_chat_id].[calendar_id]
+   * @param {function} callback (err, message)
+   */
+  associate(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      const calendar = data.find(calendar => calendar._id.toString() === calendar_id.toString());
+      if (!calendar) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      this.backend.shares.put(
+        {
+          chat_id: message.chat.id,
+          calendar_id: calendar_id
+        },
+        err => callback(err, message)
+      );
+    }
+
+    // prettifying some data
+    const temp = message.hostess.argument.split("_");
+    if (temp.length !== 2) {
+      // TODO: How to deal with this error?
+      callback();
+      return;
+    }
+    const admin_chat_id = parseInt(temp[0]), calendar_id = mongojs.ObjectId(temp[1]);
+
+    if (isNaN(admin_chat_id)) {
+      callback(new SelectionError(), message);
+      return;
+    }
+    // begin confirming calendar exists
+    message.hostess.edit_type = "user";
+    this.backend.calendars.get(
+      admin_chat_id,
+      undefined,
+      get_callback.bind(this)
+    );
   }
 
 
@@ -110,7 +169,7 @@ class Commander {
     }
 
     message.hostess.edit_type = "calendar";
-    this.backend.active_events.delete(
+    this.backend.active_edits.delete(
       message.chat.id,
       active_events_delete_callback.bind(this)
     );
@@ -228,6 +287,16 @@ class Commander {
   }
 
 
+  get_info_calendar(message, callback) {
+    
+  }
+
+
+  get_info_event(messge, callback) {
+
+  }
+
+
   list_calendars(message, callback) {
     this._list("calendar", message, callback);
   }
@@ -258,6 +327,39 @@ class Commander {
       get_callback.bind(this)
     );
   }
+
+  publish(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new ActiveCalendarError(), message);
+        return;
+      }
+
+      const active_calendar = data.find( calendar => calendar.active );
+      if (!active_calendar) {
+        callback(new ActiveCalendarError(), message);
+        return;
+      }
+
+      message.hostess.data = {
+        "admin_chat_id": message.chat.id,
+        "calendar_id": active_calendar._id
+      };
+
+      callback(undefined, message);
+    }
+
+    message.hostess.edit_type = "calendar";
+    this.backend.calendars.get(
+      message.chat.id,
+      undefined,
+      get_callback.bind(this)
+    );
+  }
+
 
   retrieve_calendar(message, callback) {
     function get_callback(err, data) {
@@ -513,12 +615,15 @@ class Commander {
   
     // no command was provided
     if (args[0][0] !== "/") {
-      return false;
+      return {
+        command: undefined,
+        argument: args.join(" ")
+      };
     }
 
     // trivial split
     const parsed = {};
-    parsed["command"] = args[0].replace("/", "");
+    parsed["command"] = args[0].toLowerCase().replace("/", "").replace("@groupmeetupbot", "");
     parsed["argument"] = args.slice(1).join(" ");
 
     // also checking for list command case
