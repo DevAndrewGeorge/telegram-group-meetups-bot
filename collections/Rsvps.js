@@ -36,7 +36,7 @@ class Rsvps {
   patch(event_id, user_id, callback) {
     this.collection.update(
       { "events._id": mongojs.ObjectId(event_id) },
-      { $addToSet: { "events.$.going": user_id } },
+      { $addToSet: { "events.$.rsvps": user_id } },
       { upsert: true },
       function (err, results) {
         if (err) {
@@ -50,7 +50,7 @@ class Rsvps {
   delete(event_id, user_id, callback) {
     this.collection.update(
       { "events._id": mongojs.ObjectId(event_id) },
-      { $pull: { "events.$.going": user_id } },
+      { $pull: { "events.$.rsvps": user_id } },
       function (err) {
         if (err) {
           log("Rsvps:delete", err);

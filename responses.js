@@ -19,18 +19,18 @@ INDISCRIMINATE RESPONSES
 responses["all"]["contact"] = `Thank you for the feedback! I'll be sure my Creator receives your message.`;
 
 
-responses["all"]["cancel"] = `{% if respond %}<em>Nothing has been done.</em>{% endif %}`;
+responses["all"]["cancel"] = `<em>Nothing has been done.</em>`;
 
 
 responses["all"]["display_calendar"] = `
-<strong>{{ title }}</strong>
-{%- if description %}
+<strong>{{ calendar.title }}</strong>
+{%- if calendar.description %}
 
-{{ description }}
+{{ calendar.description }}
 {%- endif -%}
 
-{%- if events and events|length -%}
-{%- for event in events %}
+{%- if calendar.events and calendar.events|length -%}
+{%- for event in calendar.events %}
 
 /{{ loop.index }} <strong>{{ event.title }}.</strong>
 {%- if event.from %} {{ event.from }}{%- if event.to %} - {{ event.to }}{%- endif -%}.{%- endif %}
@@ -111,7 +111,7 @@ responses["calendar"]["createcalendar"] = `Use the following commands to create 
 responses["calendar"]["publish"] = `
 Click this link to share the calendar with a group. Publishing a calendar will override a calendar already published in the gorup. Once shared, you will not need to republish if you create, edit, or delete events from this calendar.
 
-https://telegram.me/GroupMeetupsBot?startgroup={{admin_chat_id}}_{{ calendar_id }}`;
+https://telegram.me/GroupMeetupsBot?startgroup={{publish.admin_chat_id}}_{{ publish.calendar_id }}`;
 
 
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
@@ -128,11 +128,11 @@ responses["calendar"]["discard"] = `Any edits have been discarded.`;
 
 
 responses["calendar"]["preview"] = `
-{% if not title and not description %}
+{% if not calendar.title and not calendar.description %}
 <em>There is nothing to preview because you haven't set any properties yet.</em>
 {% else %}
 <em>Calendar Preview:</em>
-{% if title %}<strong>{{ title }}.</strong> {% endif %}{% if description %}{{ description }}{% endif %}
+{% if calendar.title %}<strong>{{ calendar.title }}.</strong> {% endif %}{% if calendar.description %}{{ calendar.description }}{% endif %}
 {% endif %}`;
 
 
@@ -182,15 +182,15 @@ responses["calendar"]["c"] = `
 /* ==============================================
 EVENT COMMANDS
 ============================================== */
-responses["event"]["createevent"] = `Use the following commands to create or edit your event.
+responses["event"]["createevent"] = `Use the following commands to create or edit your event. Running
 
-/title <code>[TITLE, required]</code>
-/description <code>[DESCRIPTION]</code>
-/summary a shorter description about the event
-/location 
+/title - <strong>required.</strong> the name of the event
+/description - 
+/summary - a shorter description that will appear in the event summary and full 
+/location - where the event is 
 /link an additional link to that will be attached to the end of the event info.
-/from the start date and time
-/to the end date and time
+/from - <strong>YY MM DD HH:MM [AM|PM].</strong> when the event starts.
+/to - <strong>YY MM DD HH:MM [AM|PM].</strong> when the event ends.
 
 /preview to preview what the calendar looks like
 /discard to cancel creating or editing this calendar
@@ -246,18 +246,18 @@ responses["event"]["discard"] = `Any edits have been discarded.`
 
 
 responses["event"]["preview"] = `
-<strong>{{ title }}.</strong> \
-{% if location %}{{ location }}. {% endif %}\
-{% if from %}\
-{{ from }}\
-{% if to %} - {{ to }}{% endif%}.\
+<strong>{{ event.title }}.</strong> \
+{% if event.location %}{{ event.location }}. {% endif %}\
+{% if event.from %}\
+{{ event.from }}\
+{% if event.to %} - {{ event.to }}{% endif%}.\
 {% endif %}
 
-{% if summary %}{{ summary }}{% endif %}
+{% if event.summary %}{{ event.summary }}{% endif %}
 
-{% if description %}{{ description }}{% endif %}
+{% if event.description %}{{ event.description }}{% endif %}
 
-{% if link %}<a href="{{ link }}">Click here for more info.</a>{% endif %}
+{% if event.link %}<a href="{{ event.link }}">Click here for more info.</a>{% endif %}
 `;
 
 
@@ -269,7 +269,7 @@ responses["event"]["de"] = responses["event"]["preview"];
 END USER COMMANDS
 ============================================== */
 responses["user"]["start"] = `
-Hello, everyone! My name is @GroupMeetupBot, and I'm here to keep you up-to-date on events planned for this group.
+Hello, everyone! My name is @GroupMeetupsBot, and I'm here to keep you up-to-date on events planned for this group.
 
 If you need me, just yell /calendar, and I'll give you a summary of events. From there, you can get more details for particular events and even RSVP to them.
 `;
@@ -279,28 +279,28 @@ responses["user"]["calendar"] = responses["all"]["display_calendar"];
 
 
 responses["user"]["event"] = `
-<strong>{{ title }}.</strong>
-{%- if location %} {{ location }}.{%- endif -%}
-{%- if from %} {{ from }}{%- if to %} - {{ to }}{%- endif -%}.{%- endif -%}
+<strong>{{ event.title }}.</strong>
+{%- if event.location %} {{ event.location }}.{%- endif -%}
+{%- if event.from %} {{ event.from }}{%- if event.to %} - {{ event.to }}{%- endif -%}.{%- endif -%}
 
-{%- if summary %}
+{%- if event.summary %}
 
-{{ summary }}
+{{ event.summary }}
 {%- endif -%}
 
-{%- if description %}
+{%- if event.description %}
 
-{{ description }}
+{{ event.description }}
 {%- endif -%}
 
-{%- if link %}
+{%- if event.link %}
 
-<a href="{{ link }}">Click here for more information.</a>
+<a href="{{ event.link }}">Click here for more information.</a>
 {%- endif %}
 
 <strong>RSVPs:</strong>
-{%- if going and going|length -%}
-{%- for person in going %}
+{%- if event.rsvps and event.rsvps|length -%}
+{%- for person in event.rsvps %}
 - {{ person }}
 {%- endfor -%}
 {%- else %}
@@ -309,10 +309,10 @@ responses["user"]["event"] = `
 `
 
 
-responses["user"]["rsvp"] = `Glad you can make it, @{{ username }}! \u{1F389}`;
+responses["user"]["rsvp"] = `Glad you can make it, @{{ rsvp.username }}! \u{1F389}`;
 
 
-responses["user"]["unrsvp"] = `Maybe next time, @{{ username }}. \u{1F61F}`;
+responses["user"]["unrsvp"] = `Maybe next time, @{{ unrsvp.username }}. \u{1F61F}`;
 
 
 /* ==============================================

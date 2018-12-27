@@ -59,49 +59,57 @@ class HostessBot extends TelegramBot {
   }
 
   /**
-   * Orchestrates transformation of message.hostess.data.
+   * Transforms data stored in message.hostess.data.
    * @param {Error} err 
    * @param {Message} message 
    */
   _transform(err, message) {
-    function transformer_callback(err) {
-      this.sendMessage(err, message);
-    }
+    const transformer_callback = err => this.sendMessage(err, message);
+
+    const calendar_callback = err => {
+      if (err) {
+        transformer_callback(err);
+        return;
+      }
+
+      this._transform_event(message, transformer_callback);
+    };
 
     // data is in unknown state if error has already occurred
     // do nothing as a result
     if (err) {
-      transformer_callback(err, message.hostess.data);
+      transformer_callback(err);
       return;
     }
 
-    const transformations = {
-      "event": this._user_ids_to_full_names
-    };
+    // no data to transform
+    if (!message.hostess.data) {
+      transformer_callback(undefined);
+      return;
+    }
 
-    const transformer = transformations[message.hostess.request_command] || this._fallthrough;
-    transformer.bind(this)(
+    // begin transforming data
+    // transform calendar data
+    this._transform_calendar(
       message,
-      transformer_callback.bind(this)
+      calendar_callback.bind(this)
     );
   }
 
-  /**
-   * 
-   * @param {*} data 
-   * @param {function} callback (err)
-   */
-  _fallthrough(data, callback) {
-    callback(undefined);
-  }
 
   /**
-   * Transforms event.going from array of UIDs to array of usernames
+   * Transforms event.rsvps from array of UIDs to array of usernames
    * @param {Message} message 
    * @param {function} callback (err)
    */
-  _user_ids_to_full_names(message, callback) {
-    const user_ids = message.hostess.data.going;
+  _transform_event(message, callback) {
+    const event = message.hostess.data.event;
+    if (!event) { // nothing to do if event does not exist in data
+      callback(undefined);
+      return;
+    }
+
+    const user_ids = event.rsvps;
     if (!user_ids || user_ids.length === 0) { // no RSVPs/UIDs
       callback(undefined);
       return;
@@ -125,7 +133,7 @@ class HostessBot extends TelegramBot {
 
         usernames.push(`${member.user.first_name} ${member.user.last_name || ""}`);
         if (usernames.length === user_ids.length) {
-          message.hostess.data.going = usernames;
+          message.hostess.data.event.rsvps = usernames;
           callback(undefined);
         }
       }
@@ -140,6 +148,11 @@ class HostessBot extends TelegramBot {
   }
 
 
+  _transform_calendar(message, callback) {
+    callback(undefined);
+  }
+
+
   sendMessage(err, msg) {
     if (err) {
       msg.hostess.response_command = "error";
@@ -147,6 +160,10 @@ class HostessBot extends TelegramBot {
       msg.hostess.response_command = msg.hostess.request_command;
     }
     
+    if (msg.hostess.response_mute) {
+      return;
+    }
+
     winston.loggers.get("message").info({
       timestamp: Date.now() / 1000,
       user_id: msg.from.id,

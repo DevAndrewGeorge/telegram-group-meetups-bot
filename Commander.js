@@ -74,7 +74,9 @@ class Commander {
 
   cancel(message, callback) {
     message.hostess.edit_type = "all";
-    message.hostess.data = { respond: parseInt(message.hostess.argument) };
+    if (!message.hostess.argument) {
+      message.hostess.response_mute = true;
+    }
     callback(undefined, message);
   }
 
@@ -104,9 +106,7 @@ class Commander {
         return;
       }
       
-      message.hostess.data = {
-        calendar: data[0]
-      };
+      message.hostess.data = { calendar: data[0] };
 
       this.backend.calendars.patch(
         message.chat.id,
@@ -244,7 +244,7 @@ class Commander {
         return;
       }
 
-      message.hostess.data = data[0];
+      message.hostess.data = { calendar: data[0] };
       callback(undefined, message);
     }
 
@@ -291,7 +291,7 @@ class Commander {
       }
 
       const event = calendar.events[message.hostess.argument - 1]
-      message.hostess.data = event;
+      message.hostess.data = { event: event };
       message.hostess.keyboard = Commander.createRsvpKeyboard(
         message.from.id,
         event._id.toString()
@@ -335,7 +335,7 @@ class Commander {
       let response_command;
       if (data.length) {
         response_command = "calendar";
-        message.hostess.data = data[0];
+        message.hostess.data = { "calendar": data[0] };
       } else {
         response_command = "start";
       }
@@ -396,7 +396,7 @@ class Commander {
 
       if (data.length) {
         active_edit_type = data[0].type;
-        message.hostess.data = data[0];
+        message.hostess.data = { [active_edit_type]: data[0] };
       }
 
       this.backend.calendars.get(
@@ -435,7 +435,7 @@ class Commander {
       }
 
       message.hostess.edit_type = data[0]["type"];
-      message.hostess.data = data[0];
+      message.hostess.data = { [message.hostess.edit_type]: data[0] };
       callback(undefined, message);
     }
 
@@ -467,8 +467,10 @@ class Commander {
       }
 
       message.hostess.data = {
-        "admin_chat_id": message.chat.id,
-        "calendar_id": active_calendar._id
+        publish: {
+          admin_chat_id: message.chat.id,
+          calendar_id: active_calendar._id
+        }
       };
 
       callback(undefined, message);
@@ -558,7 +560,7 @@ class Commander {
       }
 
       message.hostess.data = {
-        username: message.from.username
+        "rsvp": { username: message.from.username }
       };
       callback(undefined, message);
     }
@@ -574,7 +576,7 @@ class Commander {
   unrsvp(message, callback) {
     message.hostess.edit_type = "user";
     message.hostess.data = {
-      username: message.from.username
+      unrsvp: { username: message.from.username }
     };
     this.backend.rsvps.delete(
       mongojs.ObjectId(message.hostess.argument),
@@ -758,11 +760,15 @@ class Commander {
         return;
       }
 
-      message.hostess.data = data[0];
+      message.hostess.data = {
+        [type]: data[0]
+      };
+
       message.hostess.keyboard = Commander.createConfirmationKeyboard(
         type,
         data[0]._id
       );
+
       callback(undefined, message);
     }
     
