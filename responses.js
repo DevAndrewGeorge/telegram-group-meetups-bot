@@ -16,6 +16,9 @@ const responses = {
 /* ==============================================
 INDISCRIMINATE RESPONSES
 ============================================== */
+responses["all"]["contact"] = `Thank you for the feedback! I'll be sure my Creator receives your message.`;
+
+
 responses["all"]["cancel"] = `{% if respond %}<em>Nothing has been done.</em>{% endif %}`;
 
 
@@ -105,7 +108,10 @@ responses["calendar"]["createcalendar"] = `Use the following commands to create 
 
 
 // properties
-responses["calendar"]["publish"] = `https://telegram.me/GroupMeetupBot?startgroup={{admin_chat_id}}_{{ calendar_id }}`;
+responses["calendar"]["publish"] = `
+Click this link to share the calendar with a group. Publishing a calendar will override a calendar already published in the gorup. Once shared, you will not need to republish if you create, edit, or delete events from this calendar.
+
+https://telegram.me/GroupMeetupsBot?startgroup={{admin_chat_id}}_{{ calendar_id }}`;
 
 
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
@@ -295,7 +301,7 @@ responses["user"]["event"] = `
 <strong>RSVPs:</strong>
 {%- if going and going|length -%}
 {%- for person in going %}
-{{ person }}
+- {{ person }}
 {%- endfor -%}
 {%- else %}
 <em>none</em>
@@ -337,4 +343,25 @@ responses["help"]["calendar"] = responses["all"]["display_calendar"];
 responses["help"]["c"] = responses["calendar"]["c"];
 
 
+responses["help"]["admin"] = `
+Below is a list of all high-level admin commands. Each command will give more information on its use once received. 
+
+<strong>Calendar commands:</strong>
+/createCalendar - create a new calendar (becomes the active calendar after it is saved)
+/selectCalendar - choose a new active calendar
+/deleteCalendar - delete a calendar
+
+<strong>With an active calendar, you can:</strong>
+/edit - edit the calendar's information
+/publish - share the calendar with a group chat
+/calendar - view the calendar the way the group chat will see the calendar
+/createEvent - create a new event
+/editEvent - edit an event's information
+/deleteEvent - delete an event
+
+<strong>Other commands:</strong>
+/start - clear your active calendar
+/help - get relevant commands
+/contact [message] - send my creator a message
+`
 module.exports = responses;

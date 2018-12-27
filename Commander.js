@@ -11,6 +11,9 @@ class Commander {
   constructor(backend) {
     this.backend = backend;
     this.map = {
+      // actions for all
+      "contact": this.contact,
+
       // calendars
       "createcalendar": this.create_calendar,
       "selectcalendar": this.list_calendars,
@@ -38,6 +41,7 @@ class Commander {
       "delete": this.delete,
       "cancel": this.cancel,
       "help": this.help,
+      "admin": this.admin,
 
       //list commands
       "c": this.change_active_calendar,
@@ -61,6 +65,12 @@ class Commander {
       callback(err, message);
     }
   }
+
+  admin(message, callback) {
+    message.hostess.edit_type = "help";
+    callback(undefined, message);
+  }
+
 
   /**
    * Enables user commands such as /calendar, /#, /rsvp, and /unrsvp
@@ -186,6 +196,12 @@ class Commander {
 
   confirm_event_delete(message, callback) {
     this._confirm_delete("event", message, callback);
+  }
+
+
+  contact(message, callback) {
+    message.hostess.edit_type = "all";
+    callback(undefined, message);
   }
 
 
@@ -815,7 +831,7 @@ class Commander {
 
     // determining command type
     let command, argument;
-    const raw_command = words[0].slice(1).toLowerCase().replace("@groupmeetupbot", "");
+    const raw_command = words[0].slice(1).toLowerCase().replace("@groupmeetupsbot", "");
     if (/^[a-z]+$/g.test(raw_command)) { // all alpha commands
       command = raw_command;
       argument = words.slice(1).join(" ");
