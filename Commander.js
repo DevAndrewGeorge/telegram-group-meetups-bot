@@ -51,7 +51,7 @@ class Commander {
 
       // user commands
       "publish": this.publish,
-      "start": this.associate,
+      "start": this.start,
       "calendar": this.get_info_calendar,
       "event": this.get_info_event,
       "rsvp": this.rsvp,
@@ -69,57 +69,6 @@ class Commander {
   admin(message, callback) {
     message.hostess.edit_type = "help";
     callback(undefined, message);
-  }
-
-
-  /**
-   * Enables user commands such as /calendar, /#, /rsvp, and /unrsvp
-   * after verifying the desired calendar exists
-   * @param {Message} message hostess.argument should have format: [admin_chat_id].[calendar_id]
-   * @param {function} callback (err, message)
-   */
-  associate(message, callback) {
-    function get_callback(err, data) {
-      if (err) {
-        callback(err, message);
-        return;
-      }
-
-      const calendar = data.find(calendar => calendar._id.toString() === calendar_id.toString());
-      if (!calendar) {
-        callback(new SelectionError(), message);
-        return;
-      }
-
-      this.backend.shares.put(
-        {
-          chat_id: message.chat.id,
-          calendar_id: calendar_id
-        },
-        err => callback(err, message)
-      );
-    }
-
-    // prettifying some data
-    const temp = message.hostess.argument.split("_");
-    if (temp.length !== 2) {
-      // TODO: How to deal with this error?
-      callback();
-      return;
-    }
-    const admin_chat_id = parseInt(temp[0]), calendar_id = mongojs.ObjectId(temp[1]);
-
-    if (isNaN(admin_chat_id)) {
-      callback(new SelectionError(), message);
-      return;
-    }
-    // begin confirming calendar exists
-    message.hostess.edit_type = "user";
-    this.backend.calendars.get(
-      admin_chat_id,
-      undefined,
-      get_callback.bind(this)
-    );
   }
 
 
@@ -377,15 +326,34 @@ class Commander {
     let active_calendar_exists;
     let active_edit_type;
 
+    function shares_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      let response_command;
+      if (data.length) {
+        response_command = "calendar";
+        message.hostess.data = data[0];
+      } else {
+        response_command = "start";
+      }
+
+      message.hostess.response_command = response_command;
+      callback(undefined, message);
+    }
+
+
     function calendars_get_callback(err, data) {
       if (err) {
         callback(err, message);
         return;
       }
 
-      active_calendar_exists = data.find( calendar => calendar.active );
+      let active_calendar = active_calendar_exists = data.find( calendar => calendar.active );
 
-      // determining response
+      // determining response if possible
       let response_command;
       if (active_calendar_exists) {
         switch (active_edit_type) {
@@ -397,16 +365,26 @@ class Commander {
             break;
           default:
             response_command = "c";
+            message.hostess.data = { "calendar": active_calendar };
             break;
         }
-      } else {
-        response_command = active_edit_type === "calendar" ? "createcalendar" : "start";
+      } else if (active_edit_type === "calendar") {
+        response_command = "createcalendar";
       }
 
-      // packing data and leaving
+      // packing data and leaving if response already determined
+      if (response_command) {
+        message.hostess.response_command = response_command;
+        callback(undefined, message);
+        return;
+      }
       
-      message.hostess.response_command = response_command;
-      callback(undefined, message);
+      // one final check
+      this.backend.shares.get(
+        message.chat.id,
+        shares_get_callback
+      );
+      
     }
 
 
@@ -416,7 +394,10 @@ class Commander {
         return;
       }
 
-      active_edit_type = data[0] ? data[0].type : undefined;
+      if (data.length) {
+        active_edit_type = data[0].type;
+        message.hostess.data = data[0];
+      }
 
       this.backend.calendars.get(
         message.chat.id,
@@ -665,6 +646,16 @@ class Commander {
   }
 
 
+  start(message, callback) {
+    if (message.hostess.argument) {
+      this._associate(message, callback);
+    } else {
+      message.hostess.edit_type = "help";
+      callback(undefined, message);
+    }
+  }
+
+
   mappedFunction(command) {
       return this.map[command].bind(this);
   }
@@ -681,6 +672,57 @@ class Commander {
     } catch(err) {
       return false;
     }
+  }
+
+
+  /**
+   * Enables user commands such as /calendar, /#, /rsvp, and /unrsvp
+   * after verifying the desired calendar exists
+   * @param {Message} message hostess.argument should have format: [admin_chat_id].[calendar_id]
+   * @param {function} callback (err, message)
+   */
+  _associate(message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      const calendar = data.find(calendar => calendar._id.toString() === calendar_id.toString());
+      if (!calendar) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      this.backend.shares.put(
+        {
+          chat_id: message.chat.id,
+          calendar_id: calendar_id
+        },
+        err => callback(err, message)
+      );
+    }
+
+    // prettifying some data
+    const temp = message.hostess.argument.split("_");
+    if (temp.length !== 2) {
+      // TODO: How to deal with this error?
+      callback();
+      return;
+    }
+    const admin_chat_id = parseInt(temp[0]), calendar_id = mongojs.ObjectId(temp[1]);
+
+    if (isNaN(admin_chat_id)) {
+      callback(new SelectionError(), message);
+      return;
+    }
+    // begin confirming calendar exists
+    message.hostess.edit_type = "user";
+    this.backend.calendars.get(
+      admin_chat_id,
+      undefined,
+      get_callback.bind(this)
+    );
   }
 
 

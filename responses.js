@@ -326,6 +326,10 @@ HELP RESPONSES
 responses["help"]["start"] = `
 Hello! It doesn't look like you're actively working on anything. Let's fix that.
 
+<strong>If you're looking to view this group's calendar:</strong>
+/calendar - get the list of planned events 
+
+<strong>If you're looking to create a calendar of your own:</strong>
 /createCalendar - create a new calendar
 /selectCalendar - edit an existing calendar
 `;
@@ -337,7 +341,7 @@ responses["help"]["createcalendar"] = responses["calendar"]["createcalendar"];
 responses["help"]["createevent"] = responses["event"]["createevent"];
 
 
-responses["help"]["calendar"] = responses["all"]["display_calendar"];
+responses["help"]["calendar"] = `/calendar - get the list of planned events`;
 
 
 responses["help"]["c"] = responses["calendar"]["c"];
@@ -360,7 +364,6 @@ Below is a list of all high-level admin commands. Each command will give more in
 /deleteEvent - delete an event
 
 <strong>Other commands:</strong>
-/start - clear your active calendar
 /help - get relevant commands
 /contact [message] - send my creator a message
 `
