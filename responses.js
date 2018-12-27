@@ -6,7 +6,9 @@ const responses = {
   "calendar": {},
   "event": {},
   "all": {},
-  "user": {}
+  "user": {},
+  "help": {},
+  "start": {}
 };
 
 
@@ -306,6 +308,33 @@ responses["user"]["rsvp"] = `Glad you can make it, @{{ username }}! \u{1F389}`;
 
 responses["user"]["unrsvp"] = `Maybe next time, @{{ username }}. \u{1F61F}`;
 
+
+/* ==============================================
+HELP RESPONSES
+============================================== */
+
+
+/* ==============================================
+HELP RESPONSES
+============================================== */
+responses["help"]["start"] = `
+Hello! It doesn't look like you're actively working on anything. Let's fix that.
+
+/createCalendar - create a new calendar
+/selectCalendar - edit an existing calendar
+`;
+
+
+responses["help"]["createcalendar"] = responses["calendar"]["createcalendar"];
+
+
+responses["help"]["createevent"] = responses["event"]["createevent"];
+
+
+responses["help"]["calendar"] = responses["all"]["display_calendar"];
+
+
+responses["help"]["c"] = responses["calendar"]["c"];
 
 
 module.exports = responses;

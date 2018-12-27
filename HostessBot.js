@@ -60,7 +60,12 @@ class HostessBot extends TelegramBot {
 
 
   sendMessage(err, msg) {
-    msg.hostess.response_command = err ? "error" : msg.hostess.request_command;
+    if (err) {
+      msg.hostess.response_command = "error";
+    } else if ( !msg.hostess.response_command ) {
+      msg.hostess.response_command = msg.hostess.request_command;
+    }
+    
     winston.loggers.get("message").info({
       timestamp: Date.now() / 1000,
       user_id: msg.from.id,
@@ -86,8 +91,6 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["calendar"];
     } else if (err) {
       msg.hostess.response = responses["error"]["internal"];
-    } else if (message.hostess.request_command === "help") {
-      
     } else {
       msg.hostess.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
     }

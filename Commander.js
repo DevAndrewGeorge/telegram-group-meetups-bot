@@ -37,6 +37,7 @@ class Commander {
       "save": this.save,
       "delete": this.delete,
       "cancel": this.cancel,
+      "help": this.help,
 
       //list commands
       "c": this.change_active_calendar,
@@ -352,6 +353,66 @@ class Commander {
     this.backend.shares.get(
       message.chat.id,
       shares_get_callback.bind(this)
+    );
+  }
+
+
+  help(message, callback) {
+    let active_calendar_exists;
+    let active_edit_type;
+
+    function calendars_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      active_calendar_exists = data.find( calendar => calendar.active );
+
+      // determining response
+      let response_command;
+      if (active_calendar_exists) {
+        switch (active_edit_type) {
+          case "calendar":
+            response_command = "createcalendar";
+            break;
+          case "event":
+            response_command = "createevent";
+            break;
+          default:
+            response_command = "c";
+            break;
+        }
+      } else {
+        response_command = active_edit_type === "calendar" ? "createcalendar" : "start";
+      }
+
+      // packing data and leaving
+      
+      message.hostess.response_command = response_command;
+      callback(undefined, message);
+    }
+
+
+    function active_edits_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      active_edit_type = data[0] ? data[0].type : undefined;
+
+      this.backend.calendars.get(
+        message.chat.id,
+        undefined,
+        calendars_get_callback.bind(this)
+      );
+    }
+
+    message.hostess.edit_type = "help";
+    this.backend.active_edits.get(
+      message.chat.id,
+      active_edits_get_callback.bind(this)
     );
   }
 
