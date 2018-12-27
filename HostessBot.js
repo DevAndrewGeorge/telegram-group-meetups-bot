@@ -24,6 +24,7 @@ class HostessBot extends TelegramBot {
   receiveCallbackQuery(query) {
     query.message.from = query.from;
     query.message.text = query.data;
+    this.answerCallbackQuery(query.id);
     this.receiveMessage(query.message);
   }
 
@@ -42,7 +43,7 @@ class HostessBot extends TelegramBot {
       timestamp: msg.date,
       user_id: msg.from.id,
       chat_id: msg.chat.id,
-      command: msg.hostess.request_command,
+      command: msg.hostess.request_command || "",
       incoming: true
     });
 

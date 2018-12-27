@@ -14,6 +14,7 @@ class Commander {
       // calendars
       "createcalendar": this.create_calendar,
       "switchcalendar": this.list_calendars,
+      "deletecalendar": this.list_calendars,
       "edit": this.retrieve_calendar,
 
       // events
@@ -40,7 +41,7 @@ class Commander {
       //list commands
       "c": this.change_active_calendar,
       "e": this.retrieve_event,
-      "dc": undefined,
+      "dc": this.confirm_calendar_delete,
       "de": this.confirm_event_delete,
 
       // user commands
@@ -48,8 +49,8 @@ class Commander {
       "start": this.associate,
       "calendar": this.get_info_calendar,
       "event": this.get_info_event,
-      "rsvp": undefined,
-      "unrsvpn": undefined
+      "rsvp": this.rsvp,
+      "unrsvp": this.unrsvp
     };
   }
 
@@ -113,6 +114,7 @@ class Commander {
 
   cancel(message, callback) {
     message.hostess.edit_type = "all";
+    message.hostess.data = { respond: parseInt(message.hostess.argument) };
     callback(undefined, message);
   }
 
@@ -173,6 +175,11 @@ class Commander {
       message.chat.id,
       active_events_delete_callback.bind(this)
     );
+  }
+
+
+  confirm_calendar_delete(message, callback) {
+    message.hostess.edit_type = "calendar";
   }
 
 
@@ -288,7 +295,7 @@ class Commander {
 
 
   /**
-   * Gets calendar published to the message's originating chat.
+   * Gets published calendar.
    * @param {Telegram Message} message 
    * @param {function} callback (err, message)
    */
@@ -327,9 +334,56 @@ class Commander {
     );
   }
 
+  /**
+   * Retrieves event associated with the published calendar.
+   * @param {Telegram Message} messge 
+   * @param {function} callback (err, message)
+   */
+  get_info_event(message, callback) {
+    function calendars_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
 
-  get_info_event(messge, callback) {
+      const calendar = data[0];
+      if (calendar.events && message.hostess.argument > calendar.events.length) {
+        callback(new SelectionError(), message);
+        return;
+      }
 
+      const event = calendar.events[message.hostess.argument - 1]
+      message.hostess.data = event;
+      message.hostess.keyboard = Commander.createRsvpKeyboard(
+        message.from.id,
+        event._id.toString()
+      );
+      callback(undefined, message);
+    }
+
+    function shares_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      this.backend.calendars.get_by_id(
+        data[0].calendar_id,
+        calendars_get_callback.bind(this)
+      );
+    }
+
+    message.hostess.edit_type = "user";
+    this.backend.shares.get(
+      message.chat.id,
+      shares_get_callback.bind(this)
+    );
   }
 
 
@@ -364,6 +418,11 @@ class Commander {
     );
   }
 
+  /**
+   * Generates a link to invite bot to a group chat.
+   * @param {Message} message 
+   * @param {function} callback (err, messgae)
+   */
   publish(message, callback) {
     function get_callback(err, data) {
       if (err) {
@@ -396,7 +455,11 @@ class Commander {
     );
   }
 
-
+  /**
+   * Places a calendar in active_edits.
+   * @param {Message} message 
+   * @param {function} callback (err, message)
+   */
   retrieve_calendar(message, callback) {
     function get_callback(err, data) {
       if (err) {
@@ -423,6 +486,11 @@ class Commander {
     );
   }
 
+  /**
+   * Places an event in active_edits.
+   * @param {Message} message 
+   * @param {function} callback (err, message)
+   */
   retrieve_event(message, callback) {
     function get_callback(err, data) {
       if (err) {
@@ -444,6 +512,47 @@ class Commander {
       message.chat.id,
       message.hostess.argument - 1,
       get_callback.bind(this)
+    );
+  }
+
+  /**
+   * 
+   * @param {Telegram Message} message 
+   * @param {function} callback (err, messge)
+   */
+  rsvp(message, callback) {
+    function patch_callback(err, results) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (results.nMatched === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      message.hostess.data = {
+        username: message.from.username
+      };
+      callback(undefined, message);
+    }
+
+    message.hostess.edit_type = "user";
+    this.backend.rsvps.patch(
+      mongojs.ObjectId(message.hostess.argument),
+      message.from.id,
+      patch_callback.bind(this)
+    );
+  }
+
+  unrsvp(message, callback) {
+    message.hostess.edit_type = "user";
+    message.hostess.data = {
+      username: message.from.username
+    };
+    this.backend.rsvps.delete(
+      mongojs.ObjectId(message.hostess.argument),
+      message.from.id,
+      err => callback(err, message)
     );
   }
 
@@ -551,6 +660,11 @@ class Commander {
   }
 
 
+  _confirm_delete(type, message, callback) {
+
+  }
+
+  
   _list(type, message, callback) {
     function get_callback(err, data) {
       if (err) { //database error
@@ -630,41 +744,61 @@ class Commander {
     );
   }
 
-  static parseListCommand(command) {
-    const prefixes = ["c", "e", "dc", "de"];
-    const prefix = command.replace(/[0-9]/g, "");
-    const postfix = parseInt(command.replace(/[a-z]/g, ""));
-
-    if (prefixes.indexOf(prefix) !== -1 && !isNaN(postfix)) {
-      return {
-        command: prefix,
-        argument: postfix
-      };
-    } else {
-      return false;
-    }
-  }
-
-
+  /**
+   * Validates if passed text is a recognized command.
+   * @param {string} text 
+   */
   static parseCommand(text) {
-    const args = text.split(" ");
-  
+    //
+    const words = text.split(" ");
+
     // no command was provided
-    if (args[0][0] !== "/") {
+    if (words[0][0] !== "/") {
       return {
         command: undefined,
-        argument: args.join(" ")
+        argument: text
       };
     }
 
-    // trivial split
-    const parsed = {};
-    parsed["command"] = args[0].toLowerCase().replace("/", "").replace("@groupmeetupbot", "");
-    parsed["argument"] = args.slice(1).join(" ");
+    // determining command type
+    let command, argument;
+    const raw_command = words[0].slice(1).toLowerCase().replace("@groupmeetupbot", "");
+    if (/^[a-z]+$/g.test(raw_command)) { // all alpha commands
+      command = raw_command;
+      argument = words.slice(1).join(" ");
+    } else if (/^[1-9][0-9]*$/g.test(raw_command)) { // user list commands
+      command = "event";
+      argument = parseInt(raw_command);
+    } else if (/^((c)|(e)|(dc)|(de))([1-9][0-9]*)$/g.test(raw_command)) { // admin list commands
+      command = raw_command.match(/^((c)|(e)|(dc)|(de))/g)[0];
+      argument = parseInt(raw_command.match(/[1-9][0-9]*$/g));
+    }
 
-    // also checking for list command case
-    return this.parseListCommand(parsed["command"]) || parsed;
+    return {
+      command: command,
+      argument: argument
+    };
   }
+
+  static createRsvpKeyboard(guest_id, event_id) {
+    const inline_keyboard = [
+      [
+        {
+          text: "I'm going!",
+          callback_data: `/rsvp ${event_id}`
+        },
+        {
+          text: "I'm not going.",
+          callback_data: `/unrsvp ${event_id}`
+        }
+      ]
+    ];
+
+    return {
+      "inline_keyboard": inline_keyboard
+    };
+  }
+
 
   static createConfirmationKeyboard(type, pretty_index) {
     const inline_keyboard = [
@@ -677,7 +811,7 @@ class Commander {
       [
         {
           text: `No, don't delete this ${type}`,
-          callback_data: "/cancel"
+          callback_data: "/cancel 1"
         }
       ]
     ];

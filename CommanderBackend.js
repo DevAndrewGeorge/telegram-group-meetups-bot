@@ -7,6 +7,7 @@ const ActiveEdits = require("./collections/ActiveEdits");
 const Calendars = require("./collections/Calendars");
 const Events = require("./collections/Events");
 const Shares = require("./collections/Shares");
+const Rsvps = require("./collections/Rsvps");
 
 
 /* ==============================================
@@ -32,6 +33,7 @@ function initalize(mongo_config) {
   output.calendars = new Calendars(db.collection("calendars"));
   output.events = new Events(db.collection("calendars"));
   output.shares = new Shares(db.collection("shares"));
+  output.rsvps = new Rsvps(db.collection("calendars"));
 
   //
   db.on("connect", function() {
