@@ -179,34 +179,12 @@ class Commander {
 
 
   confirm_calendar_delete(message, callback) {
-    message.hostess.edit_type = "calendar";
+    this._confirm_delete("calendar", message, callback);
   }
 
 
   confirm_event_delete(message, callback) {
-    function get_callback(err, data) {
-      if (err) {
-        callback(err, message);
-        return;
-      } else if (data.length === 0) {
-        callback(new SelectionError(), message);
-        return;
-      }
-
-      message.hostess.data = data[0];
-      message.hostess.keyboard = Commander.createConfirmationKeyboard(
-        "event",
-        message.hostess.argument
-      );
-      callback(undefined, message);
-    }
-    
-    message.hostess.edit_type = "event";
-    this.backend.events.get(
-      message.chat.id,
-      message.hostess.argument - 1,
-      get_callback.bind(this)
-    )
+    this._confirm_delete("event", message, callback);
   }
 
 
@@ -221,51 +199,42 @@ class Commander {
 
 
   delete(message, callback) {
-    function get_callback(err, data) {
+    function delete_callback(err, results) {
       if (err) {
         callback(err, message);
         return;
-      } else if (data.length === 0) {
+      } else if (results.nRemoved === 0) {
         callback(new DeleteError(), message);
         return;
       }
-
-      func.delete(
-        message.chat.id,
-        data[0]._id,
-        err => callback(err, message)
-      );
+      callback(undefined, message);
     }
 
     // parsing command
     // figuring out if we're deleting a calendar or an event
-    const arg = message.hostess.argument;
-    let type;
-    if (arg.indexOf("calander") !== -1) {
-      type = "calendar";
-    } else if (arg.indexOf("event") !== -1) {
-      type = "event";
-    } else {
+    const words = message.hostess.argument.split("_");
+    const type = words[0];
+    if (type !== "calendar" && type !== "event") {
       callback(new DeleteError(), message);
       return;
     }
 
-    // figuring out which calendar/event we're deleting
-    const pretty_index = parseInt(arg.replace("calendar", "").replace("event", ""));
-    if (isNaN(pretty_index)) {
+    let _id;
+    try {
+      console.log(words[1])
+      _id = mongojs.ObjectId(words[1]);
+    } catch(err) {
       callback(new DeleteError(), message);
       return;
     }
-
 
     // see if calendar/event exists
     message.hostess.edit_type = type;
     const func = type === "calendar" ? this.backend.calendars : this.backend.events;
 
-    func.get(
-      message.chat.id,
-      pretty_index - 1,
-      get_callback.bind(this)
+    func.delete(
+      _id,
+      delete_callback.bind(this)
     );
   }
 
@@ -661,10 +630,33 @@ class Commander {
 
 
   _confirm_delete(type, message, callback) {
+    function get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
 
+      message.hostess.data = data[0];
+      message.hostess.keyboard = Commander.createConfirmationKeyboard(
+        type,
+        data[0]._id
+      );
+      callback(undefined, message);
+    }
+    
+    message.hostess.edit_type = type;
+    const func = type === "calendar" ? this.backend.calendars : this.backend.events;
+    func.get(
+      message.chat.id,
+      message.hostess.argument - 1,
+      get_callback.bind(this)
+    );
   }
 
-  
+
   _list(type, message, callback) {
     function get_callback(err, data) {
       if (err) { //database error
@@ -800,12 +792,12 @@ class Commander {
   }
 
 
-  static createConfirmationKeyboard(type, pretty_index) {
+  static createConfirmationKeyboard(type, _id) {
     const inline_keyboard = [
       [
         {
           text: `Yes, delete this ${type}.`,
-          callback_data: `/delete ${type}${pretty_index}`
+          callback_data: `/delete ${type}_${_id.toString()}`
         }
       ],
       [

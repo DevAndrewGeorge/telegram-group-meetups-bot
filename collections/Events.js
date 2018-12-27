@@ -95,10 +95,10 @@ class Events {
   }
 
 
-  delete(admin_chat_id, event_id, callback) {
+  delete(event_id, callback) {
     const query = {
-      admin_chat_id: admin_chat_id,
-      active: true
+      active: true,
+      "events._id": mongojs.ObjectId(event_id)
     };
 
     const update = {
@@ -112,11 +112,11 @@ class Events {
     this.collection.update(
       query,
       update,
-      err => {
+      (err, results) => {
         if (err) {
           log("Events:delete", err);
         }
-        callback(err);
+        callback(err, results);
       }
     );
   }

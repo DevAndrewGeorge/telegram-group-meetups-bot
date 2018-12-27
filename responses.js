@@ -10,6 +10,35 @@ const responses = {
 };
 
 
+
+/* ==============================================
+INDISCRIMINATE RESPONSES
+============================================== */
+responses["all"]["cancel"] = `{% if respond %}<em>Nothing has been done.</em>{% endif %}`;
+
+
+responses["all"]["display_calendar"] = `
+<strong>{{ title }}</strong>
+{%- if description %}
+
+{{ description }}
+{%- endif -%}
+
+{%- if events and events|length -%}
+{%- for event in events %}
+
+/{{ loop.index }} <strong>{{ event.title }}.</strong>
+{%- if event.from %} {{ event.from }}{%- if event.to %} - {{ event.to }}{%- endif -%}.{%- endif %}
+{%- if event.summary %} {{ event.summary }}{% endif %}
+
+{%- endfor -%}
+{%- else %}
+
+<em>There are no events scheduled.</em>
+{%- endif -%}
+`
+
+
 /* ==============================================
 ERROR RESPONSES
 ============================================== */
@@ -126,6 +155,12 @@ responses["calendar"]["deletecalendar"] = `
 {% endif %}
 `
 
+responses["calendar"]["dc"] = responses["all"]["display_calendar"];
+
+
+responses["calendar"]["delete"] = `The calendar has been deleted.`;
+
+
 responses["calendar"]["c"] = `
 <em>Now editing calendar</em> <strong>{{ calendar.title }}.</strong>
 
@@ -232,26 +267,7 @@ If you need me, just yell /calendar, and I'll give you a summary of events. From
 `;
 
 
-responses["user"]["calendar"] = `
-<strong>{{ title }}</strong>
-{%- if description %}
-
-{{ description }}
-{%- endif -%}
-
-{%- if events and events|length -%}
-{%- for event in events %}
-
-/{{ loop.index }} <strong>{{ event.title }}.</strong>
-{%- if event.from %} {{ event.from }}{%- if event.to %} - {{ event.to }}{%- endif -%}.{%- endif %}
-{%- if event.summary %} {{ event.summary }}{% endif %}
-
-{%- endfor -%}
-{%- else %}
-
-<em>There are no events scheduled.</em>
-{%- endif -%}
-`
+responses["user"]["calendar"] = responses["all"]["display_calendar"];
 
 
 responses["user"]["event"] = `
@@ -289,10 +305,7 @@ responses["user"]["rsvp"] = `Glad you can make it, @{{ username }}! \u{1F389}`;
 
 
 responses["user"]["unrsvp"] = `Maybe next time, @{{ username }}. \u{1F61F}`;
-/* ==============================================
-INDISCRIMINATE RESPONSES
-============================================== */
-responses["all"]["cancel"] = `{% if respond %}<em>Nothing has been done.</em>{% endif %}`;
+
 
 
 module.exports = responses;

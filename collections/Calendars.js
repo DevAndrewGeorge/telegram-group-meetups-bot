@@ -15,8 +15,16 @@ class Calendars {
     this.collection = collection;
   }
 
-  delete(admin_chat_id, calendar_id, callback) {
-
+  delete(calendar_id, callback) {
+    this.collection.remove(
+      { _id: calendar_id },
+      function (err, results) {
+        if (err) {
+          log("Calendars:delete", err);
+        }
+        callback(err, results);
+      }
+    );
   }
 
   
