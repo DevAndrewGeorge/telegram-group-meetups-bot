@@ -28,6 +28,10 @@ module.exports = {
         "no-unused-vars": [
             "error",
             { "argsIgnorePattern": "_" }
+        ],
+        "eol-lask": [
+            "error",
+            "always"
         ]
     }
 };
