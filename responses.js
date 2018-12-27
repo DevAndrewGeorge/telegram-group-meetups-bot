@@ -85,7 +85,7 @@ responses["error"][""] = `This response has yet to be implemented.`;
 responses["error"]["calendar"] = `You currently do not have an active calendar.
 
 /createcalendar to create a new calendar
-/switchcalendar to choose an active calendar`;
+/selectcalendar to choose an active calendar`;
 
 
 /* ==============================================
@@ -128,14 +128,14 @@ responses["calendar"]["preview"] = `
 {% endif %}`;
 
 
-responses["calendar"]["switchcalendar"] = `
+responses["calendar"]["selectcalendar"] = `
 {%- if items|length -%}
 {%- for item in items %}
 
 /c{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.description }}
 {%- endfor %}
 
-/cancel <em>Cancel switching calendars.</em>
+/cancel <em>Cancel selecting a calendar.</em>
 {%- else -%}
 <em>There's nothing to edit because nothing has been saved yet.</em>
 {% endif %}
@@ -149,7 +149,7 @@ responses["calendar"]["deletecalendar"] = `
 /dc{{ loop.index }} <strong>{{ item.title }}.</strong> {{ item.description }}
 {%- endfor %}
 
-/cancel <em>Cancel switching calendars.</em>
+/cancel <em>Cancel deleting a calendars.</em>
 {%- else -%}
 <em>There's nothing to delete because nothing has been saved yet.</em>
 {% endif %}

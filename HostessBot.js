@@ -86,6 +86,8 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["calendar"];
     } else if (err) {
       msg.hostess.response = responses["error"]["internal"];
+    } else if (message.hostess.request_command === "help") {
+      
     } else {
       msg.hostess.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
     }

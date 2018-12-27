@@ -13,7 +13,7 @@ class Commander {
     this.map = {
       // calendars
       "createcalendar": this.create_calendar,
-      "switchcalendar": this.list_calendars,
+      "selectcalendar": this.list_calendars,
       "deletecalendar": this.list_calendars,
       "edit": this.retrieve_calendar,
 
