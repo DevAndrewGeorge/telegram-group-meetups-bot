@@ -27,7 +27,45 @@ class Calendars {
     );
   }
 
-  
+
+  /**
+   * Retrieves all calenders that have been created, sorted by creation_timestamp, in [admin_chat_id].
+   * @param {integer} admin_chat_id 
+   * @param {function} callback (err, data). Data is an array.
+   */
+  get_all(admin_chat_id, callback) {
+    this.get_by_idx(admin_chat_id, undefined, callback);
+  }
+
+  /**
+   * Retrieves a calendar at [idx] created in [admin_chat_id]. If [idx] is omitted, returns all calendars created in [admin_chat_id] sorted by creation_timestamp.
+   * @param {integer} admin_chat_id 
+   * @param {integer} idx zero-based index
+   * @param {function} callback (err, data). Data is an array.
+   */
+  get_by_idx(admin_chat_id, idx, callback) {
+    const pipeline = [
+      { $match: { admin_chat_id: admin_chat_id } },
+      { $sort: { creation_timestamp: 1} }
+    ];
+
+    if (Number.isInteger(idx)) {
+      pipeline.push({ $skip: idx });
+      pipeline.push({ $limit: 1 });
+    }
+
+    this.collection.aggregate(
+      pipeline,
+      function(err, docs) {
+        if (err) {
+          log("Calendars:get_by_idx", err);
+        }
+        callback(err, docs)
+      }
+    )
+  }
+
+
   get(admin_chat_id, calendar_index, callback) {
     const pipeline = [
       { $match: { admin_chat_id: admin_chat_id } },

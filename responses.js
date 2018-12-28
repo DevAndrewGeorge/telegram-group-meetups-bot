@@ -198,6 +198,9 @@ responses["event"]["createevent"] = `Use the following commands to create or edi
 `;
 
 
+responses["event"]["e"] = responses["event"]["createevent"];
+
+
 responses["event"]["editevent"] = `
 {% if items|length %}
 {% for item in items %}\

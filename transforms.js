@@ -103,10 +103,42 @@ function transform_date_objects(from, to, callback) {
     return formatted;
   }
 }
+
+
+/**
+ * 
+ */
+function sort_events(a, b) {
+  // events with 'from' dates come before events without 'from' dates
+  if (a.from && !b.from) return -1;
+  else if (!a.from && b.from) return 1;
+
+  // both events are now known to have a 'from' date
+  // events with an earlier 'from' dates have precedence
+  if (a.from < b.from) return -1;
+  else if (a.from > b.from) return 1;
+
+  // both events are now known to have the same 'from' date
+  // events without an 'to' date come before events without a 'to' date
+  if (!a.to && b.to) return -1;
+  else if (a.to && !b.to) return 1;
+
+  // both eents are now known to both have a 'to' date
+  // events with a earlier 'to' date come before events with a later 'to' date
+  if (a.to < b.to) return -1;
+  else if (a.to > b.to) return 1;
+
+  // both events are now known to have the same 'from' and 'to' date
+  // creation_timestamp is the deciding factor
+  if (a.creation_timestamp < b.creation_timestamp) return -1;
+  else if (a.creation_timestamp > b.creation_timestamp) return 1;
+  else return 0;
+}
 /* ==============================================
 EX
 ============================================== */
 module.exports = {
   transform_date_string: transform_date_string,
-  transform_date_objects: transform_date_objects
+  transform_date_objects: transform_date_objects,
+  sort_events: sort_events
 };

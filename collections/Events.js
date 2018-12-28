@@ -15,14 +15,85 @@ class Events {
     this.collection = collection;
   }
 
+  /**
+   * Retrieves all events, sorted by from/to, associated with the given [calendar_id].
+   * @param {ObjectId} calendar_id 
+   * @param {*} callback (err, data). Data is an array.
+   */
+  get_all(calendar_id, callback) {
+    this.get_by_idx(calendar_id, undefined, callback);
+  }
+
+
+  /**
+   * If index is provied, returns event at position [idx]. Otherwise, returns all events, sorted by from/to, for given [calendar_id].
+   * @param {ObjectId} calendar_id 
+   * @param {integer} idx zero-based index
+   * @param {function} callback (err, documents). Data is an array.
+   */
+  get_by_idx(calendar_id, idx, callback) {
+    const pipeline = [
+      { $match: {_id: calendar_id } },
+      { $unwind: "$events" },
+      {
+        $project: {
+          events: 1,
+
+          // caculated fields needed to force null from/to fields to sort correctly
+          // if they are null, they become a boolean. numbers < boolean in mongo
+          // thefore null values will appear last
+          ordered_from: { $ifNull: ["$events.from", false] }
+        }
+      },
+      {
+        $sort: {
+          "ordered_from": 1,
+          "events.to": 1,
+          "events.creation_timestamp": 1
+        }
+      },
+      { $replaceRoot: { newRoot: "$events"} }
+    ];
+
+    if (Number.isInteger(idx)) {
+      pipeline.push({ $skip: idx });
+      pipeline.push({ $limit: 1 });
+    }
+
+    this.collection.aggregate(
+      pipeline,
+      function(err, docs) {
+        if (err) {
+          log("Events:get_by_idx", err);
+        }
+        callback(err, docs);
+      }
+    );
+  }
+
 
   get(admin_chat_id, event_index, callback) {
     const pipeline = [
       { $match: {admin_chat_id: admin_chat_id, active: true} },
-      { $project: { events: 1 } },
       { $unwind: "$events" },
+      {
+        $project: { 
+          events: 1,
+
+          // caculated fields needed to force null from/to fields to sort correctly
+          // if they are null, they become a boolean. numbers < boolean in mongo
+          // thefore null values will appear last
+          ordered_from: { $ifNull: ["$events.from", false] }
+        }
+      },
+      {
+        $sort: {
+          "ordered_from": 1,
+          "events.to": 1,
+          "events.creation_timestamp": 1
+        }
+      },
       { $replaceRoot: { newRoot: "$events" } },
-      { $sort: { from: 1, to: 1, creation_timestamp: 1} }
     ];
 
     if (event_index !== undefined && event_index !== null) {

@@ -276,27 +276,21 @@ class Commander {
    * @param {function} callback (err, message)
    */
   get_info_event(message, callback) {
-    function calendars_get_callback(err, data) {
+    function events_get_all_callback(err, data) {
       if (err) {
         callback(err, message);
         return;
-      } else if (data.length === 0) {
+      } if ( data.length === 0) {
         callback(new SelectionError(), message);
         return;
       }
 
-      const calendar = data[0];
-      if (calendar.events && message.hostess.argument > calendar.events.length) {
-        callback(new SelectionError(), message);
-        return;
-      }
-
-      const event = calendar.events[message.hostess.argument - 1]
-      message.hostess.data = { event: event };
+      message.hostess.data = { event: data[0] };
       message.hostess.keyboard = Commander.createRsvpKeyboard(
         message.from.id,
-        event._id.toString()
-      );
+        data[0]._id.toString()
+      ); 
+
       callback(undefined, message);
     }
 
@@ -309,11 +303,12 @@ class Commander {
         return;
       }
 
-      this.backend.calendars.get_by_id(
+      this.backend.events.get_by_idx(
         data[0].calendar_id,
-        calendars_get_callback.bind(this)
-      );
-    }
+        message.hostess.argument - 1,
+        events_get_all_callback
+      )
+    };
 
     message.hostess.edit_type = "user";
     this.backend.shares.get(
@@ -538,6 +533,12 @@ class Commander {
     }
 
     message.hostess.edit_type = "event";
+    this.backend.calendars.get(
+
+    )
+
+
+
     this.backend.events.get(
       message.chat.id,
       message.hostess.argument - 1,

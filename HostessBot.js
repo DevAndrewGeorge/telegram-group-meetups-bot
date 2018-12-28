@@ -158,6 +158,27 @@ class HostessBot extends TelegramBot {
 
 
   _transform_calendar(message, callback) {
+    let calendar;
+    try {
+      calendar = message.hostess.data.calendar;
+      if (!calendar) {
+        callback(undefined);
+        return;
+      }
+    } catch (err) {
+      callback(undefined);
+      return;
+    }
+
+    if (calendar.events) {
+      calendar.events.sort(Transforms.sort_events);
+      calendar.events.forEach(event => {
+        const temp = Transforms.transform_date_objects(event.from, event.to);
+        event.from = temp.from;
+        event.to = temp.to;
+      });
+    }
+
     callback(undefined);
   }
 
