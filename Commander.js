@@ -5,6 +5,7 @@ const PropertyError = require("./errors/PropertyError");
 const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
 const ActiveCalendarError = require("./errors/ActiveCalendarError");
+const Transforms = require("./transforms");
 
 
 class Commander {
@@ -632,10 +633,11 @@ class Commander {
         return;
       }
 
+
       this.backend.active_edits.patch(
         message.chat.id,
         property,
-        message.hostess.argument,
+        Commander.transform_property(property, message.hostess.argument),
         this.cb(message, callback).bind(this)
       );
     }
@@ -662,7 +664,12 @@ class Commander {
       return this.map[command].bind(this);
   }
 
-
+  /**
+   * Checks if [property] is configurable for [type].
+   * @param {string} type "calendar" or "event"
+   * @param {string} property 
+   * @returns {boolean}
+   */
   _validate_property(type, property) {
     const properties = {
       "calendar": ["title", "description"],
@@ -896,6 +903,27 @@ class Commander {
       argument: argument
     };
   }
+
+
+  /**
+   * Transforms a property's value if desired.
+   * @param {string} property 
+   * @param {string} value 
+   * @returns {*} the transfromed value
+   */
+  static transform_property(property, value) {
+    const transformations = {
+      "from": Transforms.transform_date_string,
+      "to": Transforms.transform_date_string
+    }
+
+    if (property in transformations) {
+      value = transformations[property](value);
+    }
+
+    return value;
+  }
+
 
   static createRsvpKeyboard(guest_id, event_id) {
     const inline_keyboard = [

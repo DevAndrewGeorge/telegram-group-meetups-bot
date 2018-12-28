@@ -9,6 +9,7 @@ const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
 const ActiveCalendarError = require("./errors/ActiveCalendarError");
 const TelegramBot = require("node-telegram-bot-api");
+const Transforms = require("./transforms");
 const responses = require("./responses");
 
 
@@ -109,6 +110,14 @@ class HostessBot extends TelegramBot {
       return;
     }
 
+    // transform dates
+    const temp = Transforms.transform_date_objects(
+      event.from,
+      event.to
+    );
+    event.from = temp.from;
+    event.to = temp.to;
+
     const user_ids = event.rsvps;
     if (!user_ids || user_ids.length === 0) { // no RSVPs/UIDs
       callback(undefined);
@@ -165,7 +174,7 @@ class HostessBot extends TelegramBot {
     }
 
     winston.loggers.get("message").info({
-      timestamp: Date.now() / 1000,
+      timestamp: Math.floor(Date.now() / 1000),
       user_id: msg.from.id,
       chat_id: msg.chat.id,
       command: msg.hostess.response_command,
