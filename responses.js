@@ -309,6 +309,11 @@ responses["user"]["event"] = `
 {%- for person in event.rsvps %}
 - {{ person }}
 {%- endfor -%}
+{%- if event.additional_guest_count %}
+<em>+{{ event.additional_guest_count }} more</em>
+{%- endif -%}
+{%- elif event.additional_guest_count %}
+<em>{{ event.additional_guest_count }} {{ "people" if event.additional_guest_count > 1 else "person" }}</em>
 {%- else %}
 <em>none</em>
 {%- endif -%}

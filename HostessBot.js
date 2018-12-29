@@ -128,27 +128,48 @@ class HostessBot extends TelegramBot {
       return;
     }
 
-    const get_chat_member_callback = (function() {
-      //
+    const get_chat_member_callbacks = (function() {
+      // tracks usernames recovered
       const usernames = [];
+      let count = 0;
       
       // flag to let inform calls of existing concurrent error
       let error = false;
       
-      return function(member, err) { // this is a Promise callback, hence the ordering
-        if (!error && err) { // invoke callback and set flag as first error
-          error = true;
-          callback(err);
-          return;
-        } else if (err) { // do no more work if concurrent error encountered
+      function on_success(member) {
+        if (error) { // do no more work if concurrent error encountered
           return;
         }
 
         usernames.push(`${member.user.first_name} ${member.user.last_name || ""}`);
-        if (usernames.length === user_ids.length) {
+        if (++count === user_ids.length) {
           message.hostess.data.event.rsvps = usernames;
+          message.hostess.data.event.additional_guest_count = user_ids.length - usernames.length;
           callback(undefined);
         }
+      }
+
+      function on_reject(err) {
+        if (error) { // do no work if error already encountered
+          return;
+        } else if (err.code !== "ETELEGRAM" || err.response.body.error_code !== 400) {
+          // if [err] is not an exepcted error, invoke callback
+          error = true;
+          HostessBot.error_callback(err);
+          callback(err);
+          return;
+        }
+
+        if (++count === user_ids.length) {
+          message.hostess.data.event.rsvps = usernames;
+          message.hostess.data.event.additional_guest_count = user_ids.length - usernames.length;
+          callback(undefined);
+        }
+      }
+
+      return {
+        on_success: on_success,
+        on_reject: on_reject 
       };
     })();
 
@@ -157,16 +178,9 @@ class HostessBot extends TelegramBot {
         message.chat.id,
         user_id
       ).then(
-        get_chat_member_callback
-      ).catch(
-        err => {
-          // tell user
-          callback(err);
-
-          // tell alerter
-          HostessBot.error_callback(err);
-        }
-      );
+        get_chat_member_callbacks.on_success,
+        get_chat_member_callbacks.on_reject
+      )
     });
   }
 
