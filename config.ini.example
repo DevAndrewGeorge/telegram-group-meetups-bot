@@ -19,6 +19,10 @@ level = debug
 message_log_path = /path/to/message/log
 application_log = /path/to/application/log
 
+[monitoring]
+alerter_log_dir = /path/to/alerter/dir
+alerter_contact = webmaster@example.com
+
 [mongo]
 host = host.com
 user = username

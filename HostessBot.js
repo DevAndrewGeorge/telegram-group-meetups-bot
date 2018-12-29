@@ -1,5 +1,6 @@
 const winston = require("winston");
 const nunjucks = require("nunjucks");
+const Alerter = require("error-alerts");
 const Commander = require("./Commander");
 const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
@@ -19,8 +20,11 @@ class HostessBot extends TelegramBot {
     this.commander = commander;
     this.on("message", this.receiveMessage);
     this.on("callback_query", this.receiveCallbackQuery);
-  }
 
+    //error handling
+    this.on("webhook_error", HostessBot.error_callback);
+    this.on("polling_error", HostessBot.error_callback);
+  }
 
   receiveCallbackQuery(query) {
     query.message.from = query.from;
@@ -152,7 +156,17 @@ class HostessBot extends TelegramBot {
       this.getChatMember(
         message.chat.id,
         user_id
-      ).then(get_chat_member_callback);
+      ).then(
+        get_chat_member_callback
+      ).catch(
+        err => {
+          // tell user
+          callback(err);
+
+          // tell alerter
+          HostessBot.error_callback(err);
+        }
+      );
     });
   }
 
@@ -194,14 +208,6 @@ class HostessBot extends TelegramBot {
       return;
     }
 
-    winston.loggers.get("message").info({
-      timestamp: Math.floor(Date.now() / 1000),
-      user_id: msg.from.id,
-      chat_id: msg.chat.id,
-      command: msg.hostess.response_command,
-      incoming: false
-    });
-  
     // TODO: deal with unsent messages (.catch())
     if (err instanceof SaveError) {
       msg.hostess.response = responses["error"]["save"];
@@ -238,9 +244,23 @@ class HostessBot extends TelegramBot {
         parse_mode: "HTML",
         reply_markup: msg.hostess.keyboard
       }
-    ).then(function sendMessageSuccess(_) {
-    }).catch(function sendMessageReject(err) {
-    });
+    ).then(
+      () => {
+        winston.loggers.get("message").info({
+          timestamp: Math.floor(Date.now() / 1000),
+          user_id: msg.from.id,
+          chat_id: msg.chat.id,
+          command: msg.hostess.response_command,
+          incoming: false
+        });
+      }
+    ).catch(
+      HostessBot.error_callback
+    );
+  }
+
+  static error_callback(err) {
+    Alerter.tell(`HostessBot_${err.code}`);
   }
 }
 

@@ -548,12 +548,6 @@ class Commander {
     }
 
     message.hostess.edit_type = "event";
-    this.backend.calendars.get(
-
-    )
-
-
-
     this.backend.events.get(
       message.chat.id,
       message.hostess.argument - 1,
