@@ -83,6 +83,21 @@ class Commander {
 
 
   change_active_calendar(message, callback) {
+    function second_patch_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.shares.put(
+        {
+          chat_id: message.chat.id,
+          calendar_id: message.hostess.data.calendar._id
+        },
+        err => callback(err, message)
+      );
+    }
+
     function patch_callback(err) {
       if (err) {
         callback(err, message);
@@ -94,7 +109,7 @@ class Commander {
         message.hostess.data.calendar._id,
         "active",
         true,
-        err => callback(err, message)
+        second_patch_callback.bind(this)
       );
     }
 
@@ -561,29 +576,85 @@ class Commander {
         return;
       }
 
-      message.hostess.data = {
-        "rsvp": { username: message.from.username }
-      };
+      message.hostess.data.rsvp.username = message.from.username;
+
       callback(undefined, message);
+    };
+      
+
+    function event_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      message.hostess.data.rsvp.title = data[0].title;
+
+      this.backend.rsvps.patch(
+        event_id,
+        message.from.id,
+        patch_callback.bind(this)
+      );
     }
 
     message.hostess.edit_type = "user";
-    this.backend.rsvps.patch(
-      mongojs.ObjectId(message.hostess.argument),
-      message.from.id,
-      patch_callback.bind(this)
+    message.hostess.data = {
+      rsvp: {}
+    };
+
+    let event_id;
+    try {
+      event_id = mongojs.ObjectId(message.hostess.argument);
+    } catch (err) {
+      // TODO: this erro does not agree with the command
+      callback(new SelectionError(), message);
+      return;
+    }
+    
+    this.backend.events.get_by_id(
+      event_id,
+      event_get_callback.bind(this)
     );
   }
 
   unrsvp(message, callback) {
+    function event_get_callback(err, data) {
+      if (err) {
+        callback(err, message);
+        return;
+      } else if (data.length === 0) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
+      message.hostess.data.unrsvp.title = data[0].title;
+
+      this.backend.rsvps.delete(
+        event_id,
+        message.from.id,
+        err => callback(err, message)
+      );
+    }
+
     message.hostess.edit_type = "user";
     message.hostess.data = {
       unrsvp: { username: message.from.username }
     };
-    this.backend.rsvps.delete(
-      mongojs.ObjectId(message.hostess.argument),
-      message.from.id,
-      err => callback(err, message)
+
+    let event_id;
+    try {
+      event_id = mongojs.ObjectId(message.hostess.argument);
+    } catch (err) {
+      // TODO: this erro does not agree with the command
+      callback(new SelectionError(), message);
+      return;
+    }
+    this.backend.events.get_by_id(
+      event_id,
+      event_get_callback.bind(this)
     );
   }
 
@@ -720,7 +791,16 @@ class Commander {
       callback();
       return;
     }
-    const admin_chat_id = parseInt(temp[0]), calendar_id = mongojs.ObjectId(temp[1]);
+    const admin_chat_id = parseInt(temp[0]);
+    
+    let calendar_id; 
+    try {
+      calendar_id = mongojs.ObjectId(temp[1]);
+    } catch(err) {
+      // TODO: does this error agree with the command?
+      callback(new SelectionError(), message);
+      return;
+    }
 
     if (isNaN(admin_chat_id)) {
       callback(new SelectionError(), message);
@@ -812,8 +892,8 @@ class Commander {
 
 
   _save_calendar(calendar, message, callback) {
-    /* after desired calendar is saved, delete active edit */
-    function calendar_put_callback(err) {
+    /* after sharing the calendar to the chat, delete the active edit */
+    function shares_put_callback(err) {
       if (err) {
         callback(err, message);
         return;
@@ -822,6 +902,22 @@ class Commander {
       this.backend.active_edits.delete(
         message.chat.id,
         err2 => callback(err2, message)
+      );
+    }
+
+    /* after desired calendar is saved, share the calendar to the chat */
+    function calendar_put_callback(err) {
+      if (err) {
+        callback(err, message);
+        return;
+      }
+
+      this.backend.shares.put(
+        {
+          chat_id: message.chat.id,
+          calendar_id: calendar._id
+        },
+        shares_put_callback.bind(this)
       );
     }
 

@@ -26,6 +26,31 @@ class Events {
 
 
   /**
+   * Retrieves event with event_id
+   * @param {ObjectId} event_id 
+   * @param {function} callback (err, data). Data is an array.
+   */
+  get_by_id(event_id, callback) {
+    const pipeline = [
+      { $match: {"events._id": event_id} },
+      { $unwind: "$events" },
+      { $match: {"events._id": event_id} },
+      { $replaceRoot: {newRoot: "$events"} }
+    ];
+
+    this.collection.aggregate(
+      pipeline,
+      function(err, docs) {
+        if (err) {
+          log("Events:get_by_id", err);
+        }
+        callback(err, docs);
+      }
+    );
+  }
+
+
+  /**
    * If index is provied, returns event at position [idx]. Otherwise, returns all events, sorted by from/to, for given [calendar_id].
    * @param {ObjectId} calendar_id 
    * @param {integer} idx zero-based index

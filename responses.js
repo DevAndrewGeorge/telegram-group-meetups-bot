@@ -19,7 +19,7 @@ INDISCRIMINATE RESPONSES
 responses["all"]["contact"] = `Thank you for the feedback! I'll be sure my Creator receives your message.`;
 
 
-responses["all"]["cancel"] = `<em>Nothing has been done.</em>`;
+responses["all"]["cancel"] = `<em>No changes have been made.</em>`;
 
 
 responses["all"]["display_calendar"] = `
@@ -312,10 +312,10 @@ responses["user"]["event"] = `
 `
 
 
-responses["user"]["rsvp"] = `Glad you can make it, @{{ rsvp.username }}! \u{1F389}`;
+responses["user"]["rsvp"] = `Glad you can make it to <strong>{{ rsvp.title }}</strong>, @{{ rsvp.username }}! \u{1F389}`;
 
 
-responses["user"]["unrsvp"] = `Maybe next time, @{{ unrsvp.username }}. \u{1F61F}`;
+responses["user"]["unrsvp"] = `I'm sad I won't be seeing you at <strong>{{ unrsvp.title }}</strong>, @{{ unrsvp.username }}. \u{1F61F}`;
 
 
 /* ==============================================
