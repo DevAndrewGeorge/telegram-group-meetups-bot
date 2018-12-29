@@ -1,6 +1,0 @@
-{
-    "verbose": true,
-    "ext": "ini,js,json,token",
-    "watch": ["/srv/hostess"],
-    "ignore": [".git*", "*node_modules*", "*app.log*"]
-}
