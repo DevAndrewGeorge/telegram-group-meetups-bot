@@ -222,7 +222,6 @@ class HostessBot extends TelegramBot {
       return;
     }
 
-    // TODO: deal with unsent messages (.catch())
     if (err instanceof SaveError) {
       msg.hostess.response = responses["error"]["save"];
     } else if (err instanceof ActiveEditError) {

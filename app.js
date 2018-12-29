@@ -164,9 +164,6 @@ function main() {
   
   // initializing bot / start listening for messages
   const token = readToken(config.telegram.token_path);
-
-
-  // TODO: general bot error handling
   if (config.telegram.fetch_method == "update") {
     configureUpdates(token);
   } else {

@@ -622,7 +622,6 @@ class Commander {
     try {
       event_id = mongojs.ObjectId(message.hostess.argument);
     } catch (err) {
-      // TODO: this erro does not agree with the command
       callback(new SelectionError(), message);
       return;
     }
@@ -661,7 +660,6 @@ class Commander {
     try {
       event_id = mongojs.ObjectId(message.hostess.argument);
     } catch (err) {
-      // TODO: this erro does not agree with the command
       callback(new SelectionError(), message);
       return;
     }
