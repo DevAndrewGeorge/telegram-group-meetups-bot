@@ -134,6 +134,7 @@ function sort_events(a, b) {
   else if (a.creation_timestamp > b.creation_timestamp) return 1;
   else return 0;
 }
+
 /* ==============================================
 EX
 ============================================== */

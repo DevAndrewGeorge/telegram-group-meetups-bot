@@ -201,6 +201,7 @@ class HostessBot extends TelegramBot {
     if (calendar.events) {
       calendar.events.sort(Transforms.sort_events);
       calendar.events.forEach(event => {
+        // dates
         const temp = Transforms.transform_date_objects(event.from, event.to);
         event.from = temp.from;
         event.to = temp.to;
