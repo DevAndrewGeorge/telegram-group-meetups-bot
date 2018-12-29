@@ -64,7 +64,7 @@ class Commander {
   cb(message, callback) {
     return function(err) {
       callback(err, message);
-    }
+    };
   }
 
   admin(message, callback) {
@@ -130,7 +130,7 @@ class Commander {
         "active",
         false,
         patch_callback.bind(this)
-      )
+      );
     }
 
     function active_events_delete_callback(err) {
@@ -203,7 +203,6 @@ class Commander {
 
     let _id;
     try {
-      console.log(words[1])
       _id = mongojs.ObjectId(words[1]);
     } catch(err) {
       callback(new DeleteError(), message);
@@ -235,7 +234,7 @@ class Commander {
       this.backend.active_edits.delete(
         message.chat.id,
         err2 => callback(err2, message)
-      )
+      );
     }
 
     this.backend.active_edits.get(
@@ -322,8 +321,8 @@ class Commander {
         data[0].calendar_id,
         message.hostess.argument - 1,
         events_get_all_callback
-      )
-    };
+      );
+    }
 
     message.hostess.edit_type = "user";
     this.backend.shares.get(
@@ -368,16 +367,16 @@ class Commander {
       let response_command;
       if (active_calendar_exists) {
         switch (active_edit_type) {
-          case "calendar":
-            response_command = "createcalendar";
-            break;
-          case "event":
-            response_command = "createevent";
-            break;
-          default:
-            response_command = "c";
-            message.hostess.data = { "calendar": active_calendar };
-            break;
+        case "calendar":
+          response_command = "createcalendar";
+          break;
+        case "event":
+          response_command = "createevent";
+          break;
+        default:
+          response_command = "c";
+          message.hostess.data = { "calendar": active_calendar };
+          break;
         }
       } else if (active_edit_type === "calendar") {
         response_command = "createcalendar";
@@ -573,7 +572,7 @@ class Commander {
       message.hostess.data.rsvp.username = message.from.username;
 
       callback(undefined, message);
-    };
+    }
       
 
     function event_get_callback(err, data) {
@@ -711,8 +710,7 @@ class Commander {
     this.backend.active_edits.get(
       message.chat.id,
       get_callback.bind(this)
-    )
-    const property = message.hostess.request_command;
+    );
   }
 
 
@@ -727,7 +725,7 @@ class Commander {
 
 
   mappedFunction(command) {
-      return this.map[command].bind(this);
+    return this.map[command].bind(this);
   }
 
   /**
@@ -1006,7 +1004,7 @@ class Commander {
     const transformations = {
       "from": Transforms.transform_date_string,
       "to": Transforms.transform_date_string
-    }
+    };
 
     if (property in transformations) {
       value = transformations[property](value);

@@ -29,7 +29,7 @@ module.exports = {
             "error",
             { "argsIgnorePattern": "_" }
         ],
-        "eol-lask": [
+        "eol-last": [
             "error",
             "always"
         ]

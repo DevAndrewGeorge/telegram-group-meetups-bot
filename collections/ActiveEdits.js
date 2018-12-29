@@ -48,12 +48,12 @@ class ActiveEdits {
       admin_chat_id: admin_chat_id,
       creation_timestamp: Date.now(),
       type: type},
-      function(err) {
-        if (err) {
-          log("ActiveEdits:post", err);
-        }
-        callback(err);
+    function(err) {
+      if (err) {
+        log("ActiveEdits:post", err);
       }
+      callback(err);
+    }
     );
   }
 

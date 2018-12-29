@@ -131,6 +131,17 @@ function main() {
   configureAlerter(config.monitoring);
   
 
+  // immediately implement error handling that builds on top of Alerter
+  const fatal_callback = err => {
+    console.error(err.stack);
+    Alerter.dead(err, () => { process.exit(4); });
+    process.exit(4);
+  };
+
+  process.on("uncaughtException", fatal_callback);
+  process.on("unhandledRejection", fatal_callback);
+
+  
   // creating PID file in the event program is running as a service
   configurePidFile(config.pid.filepath);
 
@@ -156,23 +167,11 @@ function main() {
 
 
   // TODO: general bot error handling
-  let hostess_bot;
   if (config.telegram.fetch_method == "update") {
-    hostess_bot = configureUpdates(token);
+    configureUpdates(token);
   } else {
-    hostess_bot = configureWebhook(token);
+    configureWebhook(token);
   }
-  //hostess_bot.on("message", hostess_bot.receiveMessage);
-  hostess_bot.on("polling_error", err => console.log(err));
-
-  const fatal_callback = err => {
-    console.error(err.stack);
-    Alerter.dead(err, () => { process.exit(4); });
-    process.exit(4);
-  }
-
-  process.on("uncaughtException", fatal_callback);
-  process.on("unhandledRejection", fatal_callback);
 }
 
 

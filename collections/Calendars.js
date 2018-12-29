@@ -60,9 +60,9 @@ class Calendars {
         if (err) {
           log("Calendars:get_by_idx", err);
         }
-        callback(err, docs)
+        callback(err, docs);
       }
-    )
+    );
   }
 
 
@@ -107,7 +107,7 @@ class Calendars {
         }
         callback(err, data);
       }
-    )
+    );
   }
 
 

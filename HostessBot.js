@@ -36,7 +36,7 @@ class HostessBot extends TelegramBot {
 
   receiveMessage(msg) {
     //handling incoming message
-    msg.hostess = {}
+    msg.hostess = {};
 
     // parsing
     const parsed_text = Commander.parseCommand(msg.text);
@@ -58,7 +58,6 @@ class HostessBot extends TelegramBot {
         this._transform(err, msg);
       });
     } catch(err) {
-      console.log(err);
       this.sendMessage(new CommandError(), msg);
     }
   }
@@ -149,7 +148,7 @@ class HostessBot extends TelegramBot {
           message.hostess.data.event.rsvps = usernames;
           callback(undefined);
         }
-      }
+      };
     })();
 
     user_ids.forEach(user_id => {
