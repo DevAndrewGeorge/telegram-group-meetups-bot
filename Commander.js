@@ -4,6 +4,7 @@ const ActiveEditError = require("./errors/ActiveEditError");
 const PropertyError = require("./errors/PropertyError");
 const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
+const InviteError = require("./errors/InviteError");
 const ActiveCalendarError = require("./errors/ActiveCalendarError");
 const Transforms = require("./transforms");
 
@@ -141,9 +142,16 @@ class Commander {
 
       this.backend.calendars.get(
         message.chat.id,
-        message.hostess.argument - 1,
+        calendar_index,
         get_callback.bind(this)
       );
+    }
+
+    // validate argument this command relies on
+    const calendar_index = parseInt(message.hostess.argument) - 1;
+    if (isNaN(calendar_index)) {
+      callback(new SelectionError(), message);
+      return;
     }
 
     message.hostess.edit_type = "calendar";
@@ -286,11 +294,11 @@ class Commander {
 
   /**
    * Retrieves event associated with the published calendar.
-   * @param {Telegram Message} messge 
+   * @param {Telegram Message} message hostess.argument must evaluate to an int.
    * @param {function} callback (err, message)
    */
   get_info_event(message, callback) {
-    function events_get_all_callback(err, data) {
+    function events_get_by_idx_callback(err, data) {
       if (err) {
         callback(err, message);
         return;
@@ -317,10 +325,16 @@ class Commander {
         return;
       }
 
+      const event_index = parseInt(message.hostess.argument) - 1;
+      if (isNaN(event_index)) {
+        callback(new SelectionError(), message);
+        return;
+      }
+
       this.backend.events.get_by_idx(
         data[0].calendar_id,
         message.hostess.argument - 1,
-        events_get_all_callback
+        events_get_by_idx_callback
       );
     }
 
@@ -478,7 +492,6 @@ class Commander {
 
       message.hostess.data = {
         publish: {
-          admin_chat_id: message.chat.id,
           calendar_id: active_calendar._id
         }
       };
@@ -527,7 +540,7 @@ class Commander {
 
   /**
    * Places an event in active_edits.
-   * @param {Message} message 
+   * @param {Message} message hostess.argument must validate to an int.
    * @param {function} callback (err, message)
    */
   retrieve_event(message, callback) {
@@ -544,6 +557,13 @@ class Commander {
         data[0],
         err => callback(err, message)
       );
+    }
+
+    // validate argument this command relies on
+    const event_index = parseInt(message.hostess.argument) - 1;
+    if (isNaN(event_index)) {
+      callback(new SelectionError(), message);
+      return;
     }
 
     message.hostess.edit_type = "event";
@@ -759,12 +779,8 @@ class Commander {
       if (err) {
         callback(err, message);
         return;
-      }
-
-      const calendar = data.find(calendar => calendar._id.toString() === calendar_id.toString());
-      if (!calendar) {
-        callback(new SelectionError(), message);
-        return;
+      } else if (data.length === 0) {
+        callback(new InviteError(), message);
       }
 
       this.backend.shares.put(
@@ -776,33 +792,17 @@ class Commander {
       );
     }
 
-    // prettifying some data
-    const temp = message.hostess.argument.split("_");
-    if (temp.length !== 2) {
-      // TODO: How to deal with this error?
-      callback();
-      return;
-    }
-    const admin_chat_id = parseInt(temp[0]);
-    
     let calendar_id; 
     try {
-      calendar_id = mongojs.ObjectId(temp[1]);
+      calendar_id = mongojs.ObjectId(message.hostess.argument);
     } catch(err) {
-      // TODO: does this error agree with the command?
-      callback(new SelectionError(), message);
+      callback(new InviteError(), message);
       return;
     }
 
-    if (isNaN(admin_chat_id)) {
-      callback(new SelectionError(), message);
-      return;
-    }
-    // begin confirming calendar exists
     message.hostess.edit_type = "user";
-    this.backend.calendars.get(
-      admin_chat_id,
-      undefined,
+    this.backend.calendars.get_by_id(
+      calendar_id,
       get_callback.bind(this)
     );
   }
@@ -829,7 +829,12 @@ class Commander {
     );
   }
 
-
+  /**
+   * 
+   * @param {string} type "calendar" or "event"
+   * @param {Message} message hostess.argument must evaulate to an int.
+   * @param {function} callback (err, message)
+   */
   _confirm_delete(type, message, callback) {
     function get_callback(err, data) {
       if (err) {
@@ -852,11 +857,17 @@ class Commander {
       callback(undefined, message);
     }
     
+    const index = parseInt(message.hostess.argument) - 1;
+    if (isNaN(index)) {
+      callback(new SelectionError(), message);
+      return;
+    }
+
     message.hostess.edit_type = type;
     const func = type === "calendar" ? this.backend.calendars : this.backend.events;
     func.get(
       message.chat.id,
-      message.hostess.argument - 1,
+      index,
       get_callback.bind(this)
     );
   }
@@ -982,7 +993,7 @@ class Commander {
     } else if (/^[1-9][0-9]*$/g.test(raw_command)) { // user list commands
       command = "event";
       argument = parseInt(raw_command);
-    } else if (/^((c)|(e)|(dc)|(de))([1-9][0-9]*)$/g.test(raw_command)) { // admin list commands
+    } else if (/^((c)|(e)|(dc)|(de))[1-9][0-9]*$/g.test(raw_command)) { // admin list commands
       command = raw_command.match(/^((c)|(e)|(dc)|(de))/g)[0];
       argument = parseInt(raw_command.match(/[1-9][0-9]*$/g));
     }

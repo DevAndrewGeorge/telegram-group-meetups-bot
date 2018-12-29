@@ -93,6 +93,9 @@ responses["error"]["calendar"] = `You currently do not have an active calendar.
 /selectcalendar to choose an active calendar`;
 
 
+responses["error"]["invite"] = `Well this is awkward... It seems I can't find the calendar you're trying to share. Try generating the link again and click on the new link. If this problem keeps happening, you can always:
+
+/contact [message] - yell at my creator to fix this problem`
 /* ==============================================
 CALENDAR COMMANDS
 ============================================== */
@@ -111,7 +114,7 @@ responses["calendar"]["createcalendar"] = `Use the following commands to create 
 responses["calendar"]["publish"] = `
 Click this link to share the calendar with a group. Publishing a calendar will override a calendar already published in the gorup. Once shared, you will not need to republish if you create, edit, or delete events from this calendar.
 
-https://telegram.me/GroupMeetupsBot?startgroup={{publish.admin_chat_id}}_{{ publish.calendar_id }}`;
+https://telegram.me/GroupMeetupsBot?startgroup={{ publish.calendar_id }}`;
 
 
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
