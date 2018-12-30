@@ -18,9 +18,9 @@ const tooltips = {
   "help": "/help - list commands that you can use right now",
   "location": "/location <code>[text]</code> - set an event location",
   "link": "/link <code>[text]</code> - set a link to a website about the event",
-  "preview": "/preview - preview what the calendar will look like if saved",
+  "preview": "/preview - preview what the calendar or event will look like if saved",
   "publish": "/publish - share the calendar with a group chat",
-  "save": "/save - save the calendar",
+  "save": "/save - save the calendar or event",
   "select_calendar": "/selectcalendar - choose a new active calendar",
   "summary": "/summary <code>[text]</code> - set a shorter description. this appears when events are being listed.",
   "title": "/title <code>text</code> - required. set the title.",
@@ -158,6 +158,7 @@ ${tooltips.contact}`
 /* ==============================================
 CALENDAR COMMANDS
 ============================================== */
+// high level
 responses["calendar"]["createcalendar"] = `Use the following commands to create or edit your calendar. Omit <code>text</code> to remove a property.
 
 ${tooltips.title}
@@ -168,15 +169,58 @@ ${tooltips.discard}
 ${tooltips.save}
 `;
 
+responses["calendar"]["selectcalendar"] = `
+{%- if calendars|length -%}
+{%- for calendar in calendars %}
+
+/c{{ loop.index }} <strong>{{ calendar.title }}{{ "" if calendar.title|last === "." else "." }}</strong> {{ calendar.description }}
+{%- endfor %}
+
+${tooltips.cancel}
+{%- else -%}
+<em>There are no saved calendars.</em>
+
+${tooltips.create_calendar}
+{% endif %}`;
+
+responses["calendar"]["c"] = `
+<strong>{{ calendar.title }}</strong> is your current active calendar.
+
+${tooltips.calendar}
+${tooltips.edit}
+${tooltips.publish}
+${tooltips.create_event}
+${tooltips.edit_event}
+${tooltips.delete_event}
+
+${tooltips.create_calendar}
+${tooltips.select_calendar}
+${tooltips.delete_calendar}
+`;
+
+responses["calendar"]["deletecalendar"] = responses["calendar"]["selectcalendar"].replace("/c", "/dc");
+
+responses["calendar"]["edit"] = responses["calendar"]["createcalendar"];
+
+responses["calendar"]["publish"] = `
+Hot off the press! Click the link below to share the calendar with a group. You only need to share one time, so feel free to create, edit, or delete events at any time! But be careful! Sharing a calendar will override a calendar already shared with the group.
+
+https://telegram.me/GroupMeetupsBot?startgroup={{ publish.calendar_id }}`;
+
 
 // properties
 responses["calendar"]["title"] = responses["calendar"]["description"] = responses["calendar"]["createcalendar"];
 
 
+responses["calendar"]["dc"] = responses["all"]["display_calendar"];
+
+
+responses["calendar"]["delete"] = `The calendar has been deleted.`;
+
+
+
+
 // actions
-responses["calendar"]["edit"] = responses["calendar"]["createcalendar"];
-
-
 responses["calendar"]["preview"] = `
 {%- if not calendar.title and not calendar.description -%}
 <em>There is nothing to preview because you haven't set any properties yet.</em>
@@ -187,63 +231,9 @@ responses["calendar"]["preview"] = `
 {%- if calendar.description %} {{ calendar.description }}{%- endif -%}
 {%- endif -%}`;
 
-
 responses["calendar"]["discard"] = responses["all"]["cancel"];
 
-
-responses["calendar"]["save"] = `Your calendar has been saved. It is now the active calendar.
-
-${tooltips.calendar}
-${tooltips.edit}
-${tooltips.publish}
-${tooltips.create_event}
-${tooltips.edit_event}
-${tooltips.delete_event}
-
-${tooltips.select_calendar}
-${tooltips.delete_calendar}`;
-
-
-responses["calendar"]["publish"] = `
-Hot off the press! Click the link below to share the calendar with a group. You only need to share one time, so feel free to create, edit, or delete events at any time! But be careful! Sharing a calendar will override a calendar already shared with the group.
-
-https://telegram.me/GroupMeetupsBot?startgroup={{ publish.calendar_id }}`;
-
-responses["calendar"]["selectcalendar"] = `
-{%- if items|length -%}
-{%- for item in items %}
-
-/c{{ loop.index }} <strong>{{ item.title }}{{ "" if item.title|last === "." else "." }}</strong> {{ item.description }}
-{%- endfor %}
-
-${tooltips.cancel}
-{%- else -%}
-<em>There are no saved calendars.</em>
-
-${tooltips.create_calendar}
-{% endif %}
-`
-
-
-responses["calendar"]["deletecalendar"] = responses["calendar"]["selectcalendar"].replace("/c", "/dc");
-
-
-responses["calendar"]["dc"] = responses["all"]["display_calendar"];
-
-
-responses["calendar"]["delete"] = `The calendar has been deleted.`;
-
-
-responses["calendar"]["c"] = `
-You have selected <strong>{{ calendar.title }}{{ "" if calendar.title|last === "." else "." }}</strong>
-
-${tooltips.calendar}
-${tooltips.edit}
-${tooltips.publish}
-${tooltips.create_event}
-${tooltips.edit_event}
-${tooltips.delete_event}
-`;
+responses["calendar"]["save"] = responses["calendar"]["c"];
 
 
 /* ==============================================
@@ -268,15 +258,15 @@ responses["event"]["e"] = responses["event"]["createevent"];
 
 
 responses["event"]["editevent"] = `
-{%- if items|length -%}
-{%- for item in items %}
+{%- if events|length -%}
+{%- for event in events %}
 
-/e{{ loop.index }} <strong>{{ item.title }}{{ "" if item.title|last === "." else "." }}</strong>
-{%- if item.from %} {{ item.from }}
-  {%- if item.to %} - {{ item.to }}{%- endif -%}
+/e{{ loop.index }} <strong>{{ event.title }}{{ "" if event.title|last === "." else "." }}</strong>
+{%- if event.from %} {{ event.from }}
+  {%- if event.to %} - {{ event.to }}{%- endif -%}
 .{%- endif -%}
 
-{%- if item.summary %} {{ item.summary }}{%- endif -%}
+{%- if event.summary %} {{ event.summary }}{%- endif -%}
 {%- endfor %}
 
 /cancel <em>Cancel choosing an event to edit.</em>

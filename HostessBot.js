@@ -69,36 +69,28 @@ class HostessBot extends TelegramBot {
    * @param {Message} message 
    */
   _transform(err, message) {
-    const transformer_callback = err => this.sendMessage(err, message);
+    const callback = err => this.sendMessage(err, message);
 
-    const calendar_callback = err => {
-      if (err) {
-        transformer_callback(err);
-        return;
-      }
+    // nothing to do if existing error or no data to transform
+    if (err || !message.hostess.data) {
+      callback(err);
+      return;
+    }
 
-      this._transform_event(message, transformer_callback);
+    const transformers = {
+      "calendar": this._transform_calendar,
+      "event": this._transform_event,
+      "events": this._transform_events
     };
 
-    // data is in unknown state if error has already occurred
-    // do nothing as a result
-    if (err) {
-      transformer_callback(err);
+    const data_type = Object.keys(message.hostess.data)[0];
+    if (transformers[data_type]) {
+      transformers[data_type].bind(this)(message, callback);
+      return;
+    } else {
+      callback(undefined);
       return;
     }
-
-    // no data to transform
-    if (!message.hostess.data) {
-      transformer_callback(undefined);
-      return;
-    }
-
-    // begin transforming data
-    // transform calendar data
-    this._transform_calendar(
-      message,
-      calendar_callback.bind(this)
-    );
   }
 
 
@@ -184,6 +176,15 @@ class HostessBot extends TelegramBot {
     });
   }
 
+  _transform_events(message, callback) {
+    message.hostess.data.events.forEach(event => {
+      const temp = Transforms.transform_date_objects(event.from, event.to);
+      event.from = temp.from;
+      event.to = temp.to;
+    });
+
+    callback(undefined);
+  }
 
   _transform_calendar(message, callback) {
     let calendar;

@@ -197,7 +197,19 @@ class Commander {
         callback(new DeleteError(), message);
         return;
       }
-      callback(undefined, message);
+
+      // removing share if it was a calendar that was deleted
+      if (type === "calendar") {
+        this.backend.shares.delete_by_calendar_id(
+          _id,
+          err => callback(err, message)
+        );
+        return;
+      } else {
+        callback(undefined, message);
+        return;
+      }
+      
     }
 
     // parsing command
@@ -277,6 +289,7 @@ class Commander {
         return;
       } else if (data.length === 0) {
         callback(new SelectionError(), message);
+        return;
       }
 
       this.backend.calendars.get_by_id(
@@ -878,7 +891,7 @@ class Commander {
         return;
       }
 
-      message.hostess.data = { "items" : data };
+      message.hostess.data = { [`${type}s`] : data };
       callback(undefined, message);
     }
 
@@ -938,6 +951,7 @@ class Commander {
 
     // set saved calendar to active calendar
     calendar.active = true;
+    message.hostess.data = { calendar: calendar };
     this.backend.calendars.patch(
       message.chat.id,
       undefined,
@@ -960,6 +974,7 @@ class Commander {
       );
     }
 
+    message.hostess.data = { event: event };
     this.backend.events.put(
       event,
       put_callback.bind(this)
