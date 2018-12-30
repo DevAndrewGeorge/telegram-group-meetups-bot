@@ -1,6 +1,3 @@
-[express]
-public = /path/to/public
-
 [https]
 port = 443
 key_path = /path/to/ssl/key
