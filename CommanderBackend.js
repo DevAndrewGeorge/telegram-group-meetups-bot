@@ -3,6 +3,7 @@ EXTERNAL MODULES
 ============================================== */
 const mongojs = require("mongojs");
 const winston = require("winston");
+const Alerter = require("error-alerts");
 const ActiveEdits = require("./collections/ActiveEdits");
 const Calendars = require("./collections/Calendars");
 const Events = require("./collections/Events");
@@ -40,6 +41,11 @@ function initalize(mongo_config) {
     winston.loggers.get("database").info(
       "Successfully established database connection."
     );
+  });
+
+  // error handling
+  db.on("error", function(err) {
+    Alerter.tell(err);
   });
 }
 

@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const ini = require("ini");
 const winston = require("winston");
+const Alerter = require("error-alerts");
 const HostessBot = require("./HostessBot");
 const Commander = require("./Commander");
 const CommanderBackend = require("./CommanderBackend");
@@ -24,6 +25,24 @@ function readConfigFile() {
 function configurePidFile(filepath) {
   const pid = require("npid").create(filepath, true);
   pid.removeOnExit();
+}
+
+
+function configureAlerter(config) {
+  // general setup
+  Alerter.root(config.alerter_log_dir);
+  Alerter.from("alerter@hostess.tyrantsdevelopment.com").contact(config.alerter_contact);
+
+  // for basic errors
+  Alerter.one().minute().on().threshold(3).cooldown(60);
+  Alerter.one().hour().on().threshold(180).cooldown(60);
+
+  // mongo and telegram errors need to be escalated immediately
+  Alerter.one("MongoError").minute().on().threshold(1).cooldown(1);
+  Alerter.one("HostessBot_ETELEGRAM").minute().on().threshold(1).cooldown(1);
+
+  // start the bot now
+  Alerter.start();
 }
 
 
@@ -106,8 +125,23 @@ ENTRY POINT
 function main() {
   //
   const config = readConfigFile();
+
+
+  // setting up Alerter
+  configureAlerter(config.monitoring);
   
 
+  // immediately implement error handling that builds on top of Alerter
+  const fatal_callback = err => {
+    console.error(err.stack);
+    Alerter.dead(err, () => { process.exit(4); });
+    process.exit(4);
+  };
+
+  process.on("uncaughtException", fatal_callback);
+  process.on("unhandledRejection", fatal_callback);
+
+  
   // creating PID file in the event program is running as a service
   configurePidFile(config.pid.filepath);
 
@@ -130,21 +164,11 @@ function main() {
   
   // initializing bot / start listening for messages
   const token = readToken(config.telegram.token_path);
-
-
-  // TODO: general bot error handling
-  let hostess_bot;
   if (config.telegram.fetch_method == "update") {
-    hostess_bot = configureUpdates(token);
+    configureUpdates(token);
   } else {
-    hostess_bot = configureWebhook(token);
+    configureWebhook(token);
   }
-  //hostess_bot.on("message", hostess_bot.receiveMessage);
-  hostess_bot.on("polling_error", err => console.log(err));
-
-  process.on("uncaughtException", err => {
-    console.error(err);
-  });
 }
 
 

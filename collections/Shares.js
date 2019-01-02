@@ -55,6 +55,23 @@ class Shares {
       }
     );
   }
+
+  /**
+   * Deletes all shares that point to [calendar_id]
+   * @param {ObjectId} calendar_id 
+   * @param {function} callback (err)
+   */
+  delete_by_calendar_id(calendar_id, callback) {
+    this.collection.remove(
+      { calendar_id: calendar_id },
+      function (err) {
+        if (err) {
+          log("Shares:delete_by_calendar_id", err);
+        }
+        callback(err);
+      }
+    );
+  }
 }
 
 

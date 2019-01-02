@@ -42,7 +42,7 @@ function transform_date_string(date, callback) {
   const zero = ["hour", "minute", "second", "millisecond"],
     one = ["month", "day"];
   date = parsed_date[0].start;
-  for (component in date.impliedValues) {
+  for (let component in date.impliedValues) {
     if (zero.indexOf(component) !== -1) {
       date.imply(component, 0);
     } else if (one.indexOf(component) !== -1) {
@@ -73,7 +73,7 @@ function transform_date_objects(from, to, callback) {
 
   if (!from && !to) {
     if (callback) {
-      callback(undefined, formatted)
+      callback(undefined, formatted);
       return;
     } else {
       return formatted;
@@ -134,6 +134,7 @@ function sort_events(a, b) {
   else if (a.creation_timestamp > b.creation_timestamp) return 1;
   else return 0;
 }
+
 /* ==============================================
 EX
 ============================================== */

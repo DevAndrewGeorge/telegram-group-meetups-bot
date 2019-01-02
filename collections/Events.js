@@ -139,7 +139,7 @@ class Events {
         }
         callback(err, data);
       }
-    )
+    );
   }
 
 
@@ -203,7 +203,7 @@ class Events {
           _id: mongojs.ObjectId(event_id)
         }
       }
-    }
+    };
     
     this.collection.update(
       query,
@@ -234,7 +234,7 @@ class Events {
         }
         callback(undefined, data.length !== 0);
       }
-    )
+    );
   }
 }
 

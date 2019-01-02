@@ -1,6 +1,3 @@
-[express]
-public = /path/to/public
-
 [https]
 port = 443
 key_path = /path/to/ssl/key
@@ -18,6 +15,10 @@ fetch_method = update
 level = debug
 message_log_path = /path/to/message/log
 application_log = /path/to/application/log
+
+[monitoring]
+alerter_log_dir = /path/to/alerter/dir
+alerter_contact = webmaster@example.com
 
 [mongo]
 host = host.com

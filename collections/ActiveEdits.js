@@ -48,12 +48,12 @@ class ActiveEdits {
       admin_chat_id: admin_chat_id,
       creation_timestamp: Date.now(),
       type: type},
-      function(err) {
-        if (err) {
-          log("ActiveEdits:post", err);
-        }
-        callback(err);
+    function(err) {
+      if (err) {
+        log("ActiveEdits:post", err);
       }
+      callback(err);
+    }
     );
   }
 
@@ -80,23 +80,40 @@ class ActiveEdits {
     );
   }
 
-
+  /**
+   * Places an event or calendar in the active_edits collection.
+   * @param {Calendar|Event} active_edit 
+   * @param {function} callback (err)
+   */
   put(active_edit, callback) {
-    const update = active_edit;
-    const query = {
-      admin_chat_id: active_edit.admin_chat_id
-    };
-
-    this.collection.update(
-      query,
-      update,
-      { upsert: true },
-      err => {
-        if (err) {
-          log("ActiveEdits:put", err);
-        }
+    function delete_callback(err) {
+      if (err) {
+        // not loggign because the delete function already does
         callback(err);
+        return;
       }
+
+      const update = active_edit;
+      const query = {
+        admin_chat_id: active_edit.admin_chat_id
+      };
+
+      this.collection.update(
+        query,
+        update,
+        { upsert: true },
+        err => {
+          if (err) {
+            log("ActiveEdits:put", err);
+          }
+          callback(err);
+        }
+      );
+    }
+    // we must delete the old document before storing the new one
+    this.delete(
+      active_edit.admin_chat_id,
+      delete_callback.bind(this)
     );
   }
 

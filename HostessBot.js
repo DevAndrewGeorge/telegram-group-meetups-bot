@@ -1,5 +1,6 @@
 const winston = require("winston");
 const nunjucks = require("nunjucks");
+const Alerter = require("error-alerts");
 const Commander = require("./Commander");
 const SaveError = require("./errors/SaveError");
 const ActiveEditError = require("./errors/ActiveEditError");
@@ -7,6 +8,7 @@ const PropertyError = require("./errors/PropertyError");
 const CommandError = require("./errors/CommandError");
 const SelectionError = require("./errors/SelectionError");
 const DeleteError = require("./errors/DeleteError");
+const InviteError = require("./errors/InviteError");
 const ActiveCalendarError = require("./errors/ActiveCalendarError");
 const TelegramBot = require("node-telegram-bot-api");
 const Transforms = require("./transforms");
@@ -19,8 +21,11 @@ class HostessBot extends TelegramBot {
     this.commander = commander;
     this.on("message", this.receiveMessage);
     this.on("callback_query", this.receiveCallbackQuery);
-  }
 
+    //error handling
+    this.on("webhook_error", HostessBot.error_callback);
+    this.on("polling_error", HostessBot.error_callback);
+  }
 
   receiveCallbackQuery(query) {
     query.message.from = query.from;
@@ -32,7 +37,7 @@ class HostessBot extends TelegramBot {
 
   receiveMessage(msg) {
     //handling incoming message
-    msg.hostess = {}
+    msg.hostess = {};
 
     // parsing
     const parsed_text = Commander.parseCommand(msg.text);
@@ -54,7 +59,6 @@ class HostessBot extends TelegramBot {
         this._transform(err, msg);
       });
     } catch(err) {
-      console.log(err);
       this.sendMessage(new CommandError(), msg);
     }
   }
@@ -65,36 +69,28 @@ class HostessBot extends TelegramBot {
    * @param {Message} message 
    */
   _transform(err, message) {
-    const transformer_callback = err => this.sendMessage(err, message);
+    const callback = err => this.sendMessage(err, message);
 
-    const calendar_callback = err => {
-      if (err) {
-        transformer_callback(err);
-        return;
-      }
+    // nothing to do if existing error or no data to transform
+    if (err || !message.hostess.data) {
+      callback(err);
+      return;
+    }
 
-      this._transform_event(message, transformer_callback);
+    const transformers = {
+      "calendar": this._transform_calendar,
+      "event": this._transform_event,
+      "events": this._transform_events
     };
 
-    // data is in unknown state if error has already occurred
-    // do nothing as a result
-    if (err) {
-      transformer_callback(err);
+    const data_type = Object.keys(message.hostess.data)[0];
+    if (transformers[data_type]) {
+      transformers[data_type].bind(this)(message, callback);
+      return;
+    } else {
+      callback(undefined);
       return;
     }
-
-    // no data to transform
-    if (!message.hostess.data) {
-      transformer_callback(undefined);
-      return;
-    }
-
-    // begin transforming data
-    // transform calendar data
-    this._transform_calendar(
-      message,
-      calendar_callback.bind(this)
-    );
   }
 
 
@@ -124,38 +120,71 @@ class HostessBot extends TelegramBot {
       return;
     }
 
-    const get_chat_member_callback = (function() {
-      //
+    const get_chat_member_callbacks = (function() {
+      // tracks usernames recovered
       const usernames = [];
+      let count = 0;
       
       // flag to let inform calls of existing concurrent error
       let error = false;
       
-      return function(member, err) { // this is a Promise callback, hence the ordering
-        if (!error && err) { // invoke callback and set flag as first error
-          error = true;
-          callback(err);
-          return;
-        } else if (err) { // do no more work if concurrent error encountered
+      function on_success(member) {
+        if (error) { // do no more work if concurrent error encountered
           return;
         }
 
         usernames.push(`${member.user.first_name} ${member.user.last_name || ""}`);
-        if (usernames.length === user_ids.length) {
+        if (++count === user_ids.length) {
           message.hostess.data.event.rsvps = usernames;
+          message.hostess.data.event.additional_guest_count = user_ids.length - usernames.length;
           callback(undefined);
         }
       }
+
+      function on_reject(err) {
+        if (error) { // do no work if error already encountered
+          return;
+        } else if (err.code !== "ETELEGRAM" || err.response.body.error_code !== 400) {
+          // if [err] is not an exepcted error, invoke callback
+          error = true;
+          HostessBot.error_callback(err);
+          callback(err);
+          return;
+        }
+
+        if (++count === user_ids.length) {
+          message.hostess.data.event.rsvps = usernames;
+          message.hostess.data.event.additional_guest_count = user_ids.length - usernames.length;
+          callback(undefined);
+        }
+      }
+
+      return {
+        on_success: on_success,
+        on_reject: on_reject 
+      };
     })();
 
     user_ids.forEach(user_id => {
       this.getChatMember(
         message.chat.id,
         user_id
-      ).then(get_chat_member_callback);
+      ).then(
+        get_chat_member_callbacks.on_success,
+        get_chat_member_callbacks.on_reject
+      )
     });
   }
 
+  _transform_events(message, callback) {
+    message.hostess.data.events.forEach(event => {
+      const temp = Transforms.transform_date_objects(event.from, event.to);
+      event.from = temp.from;
+      event.to = temp.to;
+    });
+
+    callback(undefined);
+  }
 
   _transform_calendar(message, callback) {
     let calendar;
@@ -173,6 +202,7 @@ class HostessBot extends TelegramBot {
     if (calendar.events) {
       calendar.events.sort(Transforms.sort_events);
       calendar.events.forEach(event => {
+        // dates
         const temp = Transforms.transform_date_objects(event.from, event.to);
         event.from = temp.from;
         event.to = temp.to;
@@ -194,15 +224,6 @@ class HostessBot extends TelegramBot {
       return;
     }
 
-    winston.loggers.get("message").info({
-      timestamp: Math.floor(Date.now() / 1000),
-      user_id: msg.from.id,
-      chat_id: msg.chat.id,
-      command: msg.hostess.response_command,
-      incoming: false
-    });
-  
-    // TODO: deal with unsent messages (.catch())
     if (err instanceof SaveError) {
       msg.hostess.response = responses["error"]["save"];
     } else if (err instanceof ActiveEditError) {
@@ -217,6 +238,8 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["delete"];
     } else if (err instanceof ActiveCalendarError) {
       msg.hostess.response = responses["error"]["calendar"];
+    } else if (err instanceof InviteError) {
+      msg.hostess.response = responses["error"]["invite"]; 
     } else if (err) {
       msg.hostess.response = responses["error"]["internal"];
     } else {
@@ -238,9 +261,23 @@ class HostessBot extends TelegramBot {
         parse_mode: "HTML",
         reply_markup: msg.hostess.keyboard
       }
-    ).then(function sendMessageSuccess(_) {
-    }).catch(function sendMessageReject(err) {
-    });
+    ).then(
+      () => {
+        winston.loggers.get("message").info({
+          timestamp: Math.floor(Date.now() / 1000),
+          user_id: msg.from.id,
+          chat_id: msg.chat.id,
+          command: msg.hostess.response_command,
+          incoming: false
+        });
+      }
+    ).catch(
+      HostessBot.error_callback
+    );
+  }
+
+  static error_callback(err) {
+    Alerter.tell(`HostessBot_${err.code}`);
   }
 }
 
