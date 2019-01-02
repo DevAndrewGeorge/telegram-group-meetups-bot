@@ -1,5 +1,6 @@
 {
   "script": "app.js",
+  "args": "/srv/hostess/private/config.ini",
   "pidFile": "/var/run/hostess.pid",
   "sourceDir": "/srv/hostess",
   "workingDir": "/srv/hostess",
