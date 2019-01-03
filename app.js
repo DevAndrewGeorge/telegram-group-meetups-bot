@@ -12,10 +12,10 @@ const log = require("./logger");
 /* ==============================================
 SETUP RELATED COMMANDS
 ============================================== */
-function readConfigFile() {
+function readConfigFile(path) {
   return ini.parse(
     fs.readFileSync(
-      path.join(__dirname, "config.ini"),
+      path,
       "utf-8"
     )
   );
@@ -124,7 +124,7 @@ ENTRY POINT
 ============================================== */
 function main() {
   //
-  const config = readConfigFile();
+  const config = readConfigFile(process.argv[2]);
 
 
   // setting up Alerter
