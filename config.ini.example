@@ -2,6 +2,7 @@
 port = 443
 key_path = /path/to/ssl/key
 cert_path = /path/to/ssl/cert
+ca_path = /path/to/ssl/ca/chain
 fqdn = www.example.tyrantsdevelopment.com
 # probably keep it 0.0.0.0 as this listens on all interfaces
 ip = 0.0.0.0 

@@ -108,7 +108,7 @@ function configureWebhook(token, https_config) {
   bot.setWebHook(
     webhook_endpoint,
     {
-      certificate: options.webHook.cert
+      certificate: https_config.ca_path
     }
   ).then(
     startListening,
@@ -165,7 +165,7 @@ function main() {
   // initializing bot / start listening for messages
   const token = readToken(config.telegram.token_path);
   if (config.telegram.fetch_method == "update") {
-    configureUpdates(token, config);
+    configureUpdates(token);
   } else {
     configureWebhook(token, config.https);
   }
