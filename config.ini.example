@@ -29,4 +29,5 @@ database = db
 
 [mailgun]
 api_key=mailgun_api_key
+domain=test.example.com
 to=webmaster@example.com
