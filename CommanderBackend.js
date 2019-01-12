@@ -28,11 +28,8 @@ function initalize(config) {
   }
 
   //
-  const conn_str = `${config.user}:${config.pass}@${config.host}/${config.database}?ssl=${config.ssl}`;
-  if (config.replica_set) {
-    conn_str += `&replicaSet=${config.replica_set}`;
-  }
-
+  const conn_str = `${config.user}:${config.pass}@${config.host}/${config.database}?ssl=${config.ssl}${ config.replica_set ? `&replicaSet=${config.replica_set}` : ""}`;
+  
   db = mongojs(conn_str, ["active_edits"]);
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
   output.calendars = new Calendars(db.collection("calendars"));
