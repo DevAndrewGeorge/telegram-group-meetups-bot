@@ -1,7 +1,8 @@
-const path = require("path");
+const os = require("os");
 const fs = require("fs");
 const ini = require("ini");
 const winston = require("winston");
+const mailgun = require("mailgun-js");
 const Alerter = require("error-alerts");
 const HostessBot = require("./HostessBot");
 const Commander = require("./Commander");
@@ -28,7 +29,7 @@ function configurePidFile(filepath) {
 }
 
 
-function configureAlerter(config) {
+function configureAlerter(config, alert_callback) {
   // general setup
   Alerter.root(config.alerter_log_dir);
   Alerter.from("alerter@hostess.tyrantsdevelopment.com").contact(config.alerter_contact);
@@ -38,8 +39,8 @@ function configureAlerter(config) {
   Alerter.one().hour().on().threshold(180).cooldown(60);
 
   // mongo and telegram errors need to be escalated immediately
-  Alerter.one("MongoError").minute().on().threshold(1).cooldown(1);
-  Alerter.one("HostessBot_ETELEGRAM").minute().on().threshold(1).cooldown(1);
+  Alerter.one("MongoError").act(alert_callback).minute().on().threshold(1).cooldown(1);
+  Alerter.one("HostessBot_ETELEGRAM").act(alert_callback).minute().on().threshold(1).cooldown(1);
 
   // start the bot now
   Alerter.start();
@@ -128,7 +129,17 @@ function main() {
 
 
   // setting up Alerter
-  configureAlerter(config.monitoring);
+  function send_email(err, timespan) {
+    const data = {
+      from: `${os.hostname()}`,
+      to: config.mailgun.to,
+      subject: "Alerter Error",
+      text: `Error received in the last ${timespan}!\n\n${err.toString()}`
+    };
+
+    mailgun(config.mailgun.api_key, config.mailgun.domain).messages().send(data);
+  }
+  configureAlerter(config.monitoring, send_email);
   
 
   // immediately implement error handling that builds on top of Alerter
