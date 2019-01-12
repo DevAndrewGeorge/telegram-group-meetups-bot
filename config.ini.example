@@ -26,3 +26,7 @@ host = host.com
 user = username
 pass = password
 database = db
+
+[mailgun]
+api_key=mailgun_api_key
+to=webmaster@example.com
