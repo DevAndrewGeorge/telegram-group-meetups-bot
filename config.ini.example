@@ -26,6 +26,9 @@ host = host.com
 user = username
 pass = password
 database = db
+replica_set = optional
+ssl = boolean
+
 
 [mailgun]
 api_key=mailgun_api_key

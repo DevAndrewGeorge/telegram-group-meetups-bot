@@ -21,14 +21,18 @@ const output = {};
 /* ==============================================
 SETUP RELATED FUNCTIONS
 ============================================== */
-function initalize(mongo_config) {
+function initalize(config) {
   // only initialize once
   if (db) {
     return;
   }
 
   //
-  const conn_str = mongo_config.user + ":" + mongo_config.pass + "@" + mongo_config.host + "/" + mongo_config.database;
+  const conn_str = `${config.user}:${config.pass}@${config.host}/${config.database}?ssl=${config.ssl}`;
+  if (config.replica_set) {
+    conn_str += `&replicaSet=${config.replica_set}`;
+  }
+
   db = mongojs(conn_str, ["active_edits"]);
   output.active_edits = new ActiveEdits(db.collection("active_edits"));
   output.calendars = new Calendars(db.collection("calendars"));
