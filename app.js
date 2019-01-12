@@ -35,8 +35,8 @@ function configureAlerter(config, alert_callback) {
   Alerter.from("alerter@hostess.tyrantsdevelopment.com").contact(config.alerter_contact);
 
   // for basic errors
-  Alerter.one().minute().on().threshold(3).cooldown(60);
-  Alerter.one().hour().on().threshold(180).cooldown(60);
+  Alerter.one().act(alert_callback).minute().on().threshold(3).cooldown(60);
+  Alerter.one().act(alert_callback).hour().on().threshold(180).cooldown(60);
 
   // mongo and telegram errors need to be escalated immediately
   Alerter.one("MongoError").act(alert_callback).minute().on().threshold(1).cooldown(1);
