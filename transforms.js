@@ -135,11 +135,22 @@ function sort_events(a, b) {
   else return 0;
 }
 
+/**
+ * Removes terminating period from setence if it exists.
+ * @param {string} sentence 
+ * @returns {string}
+ */
+function transform_sentence(sentence) {
+  return sentence.lastIndexOf(".") === sentence.length - 1 ? sentence.slice(0, -1) : sentence;
+}
+
+
 /* ==============================================
-EX
+EXPORTS
 ============================================== */
 module.exports = {
   transform_date_string: transform_date_string,
   transform_date_objects: transform_date_objects,
+  transform_sentence: transform_sentence,
   sort_events: sort_events
 };

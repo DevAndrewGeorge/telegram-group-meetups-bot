@@ -4,7 +4,7 @@
   "description": "A Telegram Bot capable of creating and maintaining calendars with RSVP capabilities.",
   "main": "bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "eslint": "^5.12.0",
-    "eslint-config-google": "^0.11.0"
+    "eslint-config-google": "^0.11.0",
+    "mocha": "^5.2.0"
   }
 }
