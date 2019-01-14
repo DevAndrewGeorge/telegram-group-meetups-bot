@@ -6,7 +6,7 @@ const winston = require("winston");
 
 
 function log(funcName, err) {
-  winston.loggers.get("database").error(funcName + " Events- " + err.toString());
+  winston.loggers.get("database").error(funcName + " - " + err.toString());
 }
 
 
