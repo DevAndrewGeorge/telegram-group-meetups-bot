@@ -602,7 +602,12 @@ class Commander {
         return;
       }
 
-      message.hostess.data.event.rsvps.push(message.from.id);
+      const rsvps = message.hostess.data.event.rsvps;
+      if (rsvps) {
+        rsvps.push(message.from.id);
+      } else {
+        message.hostess.data.event.rsvpns = [ message.from.id ];
+      }
 
       callback(undefined, message);
     }
@@ -656,8 +661,12 @@ class Commander {
       }
 
       message.hostess.data.event = data[0];
-      message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
+      rsvps = message.hostess.data.event.rsvps;
 
+      if (rsvps) {
+        message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
+      }
+      
       this.backend.rsvps.delete(
         event_id,
         message.from.id,
