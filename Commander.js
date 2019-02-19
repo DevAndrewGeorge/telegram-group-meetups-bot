@@ -602,7 +602,7 @@ class Commander {
         return;
       }
 
-      message.hostess.data.rsvp.username = message.from.username;
+      message.hostess.data.event.rsvps.push(message.from.id);
 
       callback(undefined, message);
     }
@@ -617,7 +617,7 @@ class Commander {
         return;
       }
 
-      message.hostess.data.rsvp.title = data[0].title;
+      message.hostess.data.event = data[0];
 
       this.backend.rsvps.patch(
         event_id,
@@ -628,7 +628,7 @@ class Commander {
 
     message.hostess.edit_type = "user";
     message.hostess.data = {
-      rsvp: {}
+      event: {}
     };
 
     let event_id;
@@ -655,7 +655,8 @@ class Commander {
         return;
       }
 
-      message.hostess.data.unrsvp.title = data[0].title;
+      message.hostess.data.event = data[0];
+      message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
 
       this.backend.rsvps.delete(
         event_id,
@@ -666,7 +667,7 @@ class Commander {
 
     message.hostess.edit_type = "user";
     message.hostess.data = {
-      unrsvp: { username: message.from.username }
+     event: {}
     };
 
     let event_id;
