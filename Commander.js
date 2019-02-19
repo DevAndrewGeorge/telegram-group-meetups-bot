@@ -603,10 +603,10 @@ class Commander {
       }
 
       const rsvps = message.hostess.data.event.rsvps;
-      if (rsvps) {
+      if (rsvps && rsvps.indexOf(message.from.id) === -1) {
         rsvps.push(message.from.id);
       } else {
-        message.hostess.data.event.rsvpns = [ message.from.id ];
+        message.hostess.data.event.rsvps = [ message.from.id ];
       }
 
       message.hostess.keyboard = Commander.createRsvpKeyboard(
