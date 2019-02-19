@@ -609,6 +609,11 @@ class Commander {
         message.hostess.data.event.rsvpns = [ message.from.id ];
       }
 
+      message.hostess.keyboard = Commander.createRsvpKeyboard(
+        undefined,
+        message.hostess.data.event._id.toString()
+      );
+
       callback(undefined, message);
     }
       
@@ -665,6 +670,11 @@ class Commander {
       if (rsvps) {
         message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
       }
+
+      message.hostess.keyboard = Commander.createRsvpKeyboard(
+        undefined,
+        message.hostess.data.event._id.toString()
+      );
       
       this.backend.rsvps.delete(
         event_id,
