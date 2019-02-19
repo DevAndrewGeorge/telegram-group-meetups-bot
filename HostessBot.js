@@ -30,6 +30,8 @@ class HostessBot extends TelegramBot {
   receiveCallbackQuery(query) {
     query.message.from = query.from;
     query.message.text = query.data;
+    // TODO: document
+    query.message.from.query_id = query.id;
     this.receiveMessage(query.message);
   }
 
@@ -252,7 +254,7 @@ class HostessBot extends TelegramBot {
       );
     } else if (msg.hostess.request_command === "rsvp") { 
       // TODO: catch promises
-      this.answerCallbackQuery(query.id, {
+      this.answerCallbackQuery(msg.from.query_id, {
         text: `Glad you can make it to ${msg.data.event.title}, @${msg.from.username}!`
       });
 
@@ -264,7 +266,7 @@ class HostessBot extends TelegramBot {
       return;
     } else if (msg.hostess.request_command === "unrsvp") {
       // TODO: catch promises
-      this.answerCallbackQuery(query.id, {
+      this.answerCallbackQuery(msg.from.query_id, {
         text: `I'm sad I won't be seeing you at ${msg.data.event.title}, @${msg.from.username}.`
       });
 
