@@ -602,7 +602,17 @@ class Commander {
         return;
       }
 
-      message.hostess.data.rsvp.username = message.from.username;
+      const rsvps = message.hostess.data.event.rsvps;
+      if (rsvps && rsvps.indexOf(message.from.id) === -1) {
+        rsvps.push(message.from.id);
+      } else {
+        message.hostess.data.event.rsvps = [ message.from.id ];
+      }
+
+      message.hostess.keyboard = Commander.createRsvpKeyboard(
+        undefined,
+        message.hostess.data.event._id.toString()
+      );
 
       callback(undefined, message);
     }
@@ -617,7 +627,7 @@ class Commander {
         return;
       }
 
-      message.hostess.data.rsvp.title = data[0].title;
+      message.hostess.data.event = data[0];
 
       this.backend.rsvps.patch(
         event_id,
@@ -628,7 +638,7 @@ class Commander {
 
     message.hostess.edit_type = "user";
     message.hostess.data = {
-      rsvp: {}
+      event: {}
     };
 
     let event_id;
@@ -655,8 +665,17 @@ class Commander {
         return;
       }
 
-      message.hostess.data.unrsvp.title = data[0].title;
+      message.hostess.data.event = data[0];
+      const rsvps = message.hostess.data.event.rsvps;
+      if (rsvps) {
+        message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
+      }
 
+      message.hostess.keyboard = Commander.createRsvpKeyboard(
+        undefined,
+        message.hostess.data.event._id.toString()
+      );
+      
       this.backend.rsvps.delete(
         event_id,
         message.from.id,
@@ -666,7 +685,7 @@ class Commander {
 
     message.hostess.edit_type = "user";
     message.hostess.data = {
-      unrsvp: { username: message.from.username }
+     event: {}
     };
 
     let event_id;

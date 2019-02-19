@@ -30,7 +30,8 @@ class HostessBot extends TelegramBot {
   receiveCallbackQuery(query) {
     query.message.from = query.from;
     query.message.text = query.data;
-    this.answerCallbackQuery(query.id);
+    // TODO: document
+    query.message.from.query_id = query.id;
     this.receiveMessage(query.message);
   }
 
@@ -244,6 +245,7 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["internal"];
     } else {
       msg.hostess.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
+      msg.hostess.response = nunjucks.renderString(msg.hostess.response, msg.hostess.data || {} );
     }
     
     if (msg.hostess.request_command === "contact") {
@@ -251,12 +253,39 @@ class HostessBot extends TelegramBot {
         745599548,
         msg.hostess.argument
       );
+    } else if (msg.hostess.request_command === "rsvp") { 
+      // TODO: catch promises
+      this.answerCallbackQuery(msg.from.query_id, {
+        text: `Glad you can make it to ${msg.hostess.data.event.title}, @${msg.from.username}!`
+      });
+
+
+      this.editMessageText(msg.hostess.response, {
+        chat_id: msg.chat.id,
+        message_id: msg.message_id,
+        parse_mode: "HTML",
+        reply_markup: msg.hostess.keyboard
+      });
+      return;
+    } else if (msg.hostess.request_command === "unrsvp") {
+      // TODO: catch promises
+      this.answerCallbackQuery(msg.from.query_id, {
+        text: `I'm sad I won't be seeing you at ${msg.hostess.data.event.title}, @${msg.from.username}.`
+      });
+
+      this.editMessageText(msg.hostess.response, {
+        chat_id: msg.chat.id,
+        message_id: msg.message_id,
+        parse_mode: "HTML",
+        reply_markup: msg.hostess.keyboard
+      });
+      return;
     }
 
 
     super.sendMessage(
       msg.chat.id,
-      nunjucks.renderString(msg.hostess.response, msg.hostess.data || {}),
+      msg.hostess.response,
       {
         parse_mode: "HTML",
         reply_markup: msg.hostess.keyboard
