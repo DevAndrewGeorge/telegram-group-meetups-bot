@@ -603,10 +603,15 @@ class Commander {
       }
 
       const rsvps = message.hostess.data.event.rsvps;
+<<<<<<< HEAD
       if (rsvps) {
         if (rsvps.indexOf(message.from.id) === -1) {
           rsvps.push(message.from.id);
         }
+=======
+      if (rsvps && rsvps.indexOf(message.from.id) === -1) {
+        rsvps.push(message.from.id);
+>>>>>>> master
       } else {
         message.hostess.data.event.rsvps = [ message.from.id ];
       }
