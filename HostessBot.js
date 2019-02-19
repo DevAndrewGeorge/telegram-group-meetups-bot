@@ -255,7 +255,7 @@ class HostessBot extends TelegramBot {
     } else if (msg.hostess.request_command === "rsvp") { 
       // TODO: catch promises
       this.answerCallbackQuery(msg.from.query_id, {
-        text: `Glad you can make it to ${msg.data.event.title}, @${msg.from.username}!`
+        text: `Glad you can make it to ${msg.hostess.data.event.title}, @${msg.from.username}!`
       });
 
 
@@ -267,7 +267,7 @@ class HostessBot extends TelegramBot {
     } else if (msg.hostess.request_command === "unrsvp") {
       // TODO: catch promises
       this.answerCallbackQuery(msg.from.query_id, {
-        text: `I'm sad I won't be seeing you at ${msg.data.event.title}, @${msg.from.username}.`
+        text: `I'm sad I won't be seeing you at ${msg.hostess.data.event.title}, @${msg.from.username}.`
       });
 
       this.editMessageText(msg.hostess.response, {
