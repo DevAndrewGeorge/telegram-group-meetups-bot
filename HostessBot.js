@@ -260,6 +260,7 @@ class HostessBot extends TelegramBot {
 
 
       this.editMessageText(msg.hostess.response, {
+        chat_id: msg.chat.id,
         message_id: msg.message_id,
         parse_mode: "HTML"
       });
@@ -271,6 +272,7 @@ class HostessBot extends TelegramBot {
       });
 
       this.editMessageText(msg.hostess.response, {
+        chat_id: msg.chat.id,
         message_id: msg.message_id,
         parse_mode: "HTML"
       });
