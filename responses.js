@@ -314,11 +314,11 @@ responses["user"]["calendar"] = responses["all"]["display_calendar"];
 responses["user"]["event"] = responses["all"]["display_event"];
 
 
-responses["user"]["rsvp"] = `Glad you can make it to <strong>{{ rsvp.title }}</strong>, @{{ rsvp.username }}! \u{1F389}`;
+//responses["user"]["rsvp"] = `Glad you can make it to <strong>{{ rsvp.title }}</strong>, @{{ rsvp.username }}! \u{1F389}`;
+responses["user"]["rsvp"] = responses["all"]["display_event"];
 
-
-responses["user"]["unrsvp"] = `I'm sad I won't be seeing you at <strong>{{ unrsvp.title }}</strong>, @{{ unrsvp.username }}. \u{1F61F}`;
-
+//responses["user"]["unrsvp"] = `I'm sad I won't be seeing you at <strong>{{ unrsvp.title }}</strong>, @{{ unrsvp.username }}. \u{1F61F}`;
+responses["user"]["unrsvp"] = responses["all"]["display_event"];
 
 /* ==============================================
 HELP RESPONSES
