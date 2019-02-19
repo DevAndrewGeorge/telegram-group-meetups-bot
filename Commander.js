@@ -661,8 +661,7 @@ class Commander {
       }
 
       message.hostess.data.event = data[0];
-      rsvps = message.hostess.data.event.rsvps;
-
+      const rsvps = message.hostess.data.event.rsvps;
       if (rsvps) {
         message.hostess.data.event.rsvps = message.hostess.data.event.rsvps.filter(id => id !== message.from.id);
       }
