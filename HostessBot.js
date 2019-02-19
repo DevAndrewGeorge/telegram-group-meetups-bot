@@ -245,6 +245,7 @@ class HostessBot extends TelegramBot {
       msg.hostess.response = responses["error"]["internal"];
     } else {
       msg.hostess.response = responses[msg.hostess.edit_type][msg.hostess.response_command] || responses["error"][""];
+      msg.hostess.response = nunjucks.renderString(msg.hostess.response, msg.hostess.data || {} );
     }
     
     if (msg.hostess.request_command === "contact") {
@@ -262,7 +263,8 @@ class HostessBot extends TelegramBot {
       this.editMessageText(msg.hostess.response, {
         chat_id: msg.chat.id,
         message_id: msg.message_id,
-        parse_mode: "HTML"
+        parse_mode: "HTML",
+        reply_markup: msg.hostess.keyboard
       });
       return;
     } else if (msg.hostess.request_command === "unrsvp") {
@@ -274,7 +276,8 @@ class HostessBot extends TelegramBot {
       this.editMessageText(msg.hostess.response, {
         chat_id: msg.chat.id,
         message_id: msg.message_id,
-        parse_mode: "HTML"
+        parse_mode: "HTML",
+        reply_markup: msg.hostess.keyboard
       });
       return;
     }
@@ -282,7 +285,7 @@ class HostessBot extends TelegramBot {
 
     super.sendMessage(
       msg.chat.id,
-      nunjucks.renderString(msg.hostess.response, msg.hostess.data || {}),
+      msg.hostess.response,
       {
         parse_mode: "HTML",
         reply_markup: msg.hostess.keyboard
