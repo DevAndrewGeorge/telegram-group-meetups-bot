@@ -4,10 +4,10 @@
 A Telegram Bot capable of creating and maintaining calendars with RSVP capabilities.
 
 If you'd like a short tour of the major code files checkout:
-* [config.ini.example](config.init.example) is the app configuration. It allows secrets to not have to be committed to source (and therefore public). It's also nice avoiding hardcoding URLs/filepaths/etc.
+* [config.ini.example](config.ini.example) is the app configuration. It allows secrets to not have to be committed to source (and therefore public). It's also nice avoiding hardcoding URLs/filepaths/etc.
 * [app.js](app.js) deals with program initialization.
 * [HostessBot.js](HostessBot.js) handles high level user actions, including routing user comands to internal commands. It also handles the bulk of error handling.
-* [Commander.js](command.js) is the internal API that handles low level actions and sends queries to the mongo backend.
+* [Commander.js](Commander.js) is the internal API that handles low level actions and sends queries to the mongo backend.
 * [collections/](collections/) handles interfacing with the Mongo backend.
 
 ## Architecture
