@@ -19,7 +19,7 @@
   "dependencies": {
     "chrono-node": "^1.3.5",
     "error-alerts": "^0.3.0",
-    "ini": "^1.3.5",
+    "ini": "^1.3.6",
     "mailgun-js": "^0.22.0",
     "mailgun.js": "^2.0.1",
     "moment": "^2.23.0",
